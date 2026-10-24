@@ -154,7 +154,11 @@ static const char *skip_value(const char *p)
         }
         return 0;
     }
-    while (*p && *p != ',' && *p != '}' && *p != ']' && !is_ws(*p)) p++;
+    {
+        const char *start = p;
+        while (*p && *p != ',' && *p != '}' && *p != ']' && !is_ws(*p)) p++;
+        if (p == start) return 0;          /* nic nie przeczytano: błędny JSON, nie kręcimy się w kółko */
+    }
     return p;
 }
 

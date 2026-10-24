@@ -3,6 +3,7 @@
 #import "WLTheme.h"
 #import "WLLang.h"
 #import "WLRates.h"
+#import "WLCrash.h"
 #import "WLConverterController.h"
 #import "WLRatesController.h"
 #import "WLSettingsController.h"
@@ -50,14 +51,21 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    NSString *lastReport = WLTakeLastRunReport();
+    WLCrashInstall();
+    WLCrumb(@"start aplikacji");
     [WLStore shared];
+    WLCrumb(@"ustawienia wczytane");
     [WLRates shared];
+    WLCrumb(@"kursy wczytane");
     [application setStatusBarStyle:UIStatusBarStyleBlackOpaque];
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor blackColor];
 
     self.window.rootViewController = [self buildTabs];
+    WLCrumb(@"interfejs zbudowany");
     [self.window makeKeyAndVisible];
+    WLCrumb(@"okno pokazane");
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appearanceChanged:) name:WLAppearanceDidChangeNotification object:nil];
 
     /* ekran powitalny: ten sam obraz co Default.png, przytrzymany chwilę i płynnie zgaszony */
@@ -75,16 +83,24 @@
                              completion:^(BOOL finished) { [cover removeFromSuperview]; }];
         });
     }
+    if (lastReport) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Waluty – diagnostyka" message:lastReport delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+            [a show];
+        });
+    }
     return YES;
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     /* po starcie i po powrocie do aplikacji: jeśli kursy mają ponad godzinę, pobierz nowe */
+    WLCrumb(@"aplikacja aktywna");
     [[WLRates shared] refreshIfNeeded];
+    WLCrumb(@"po sprawdzeniu kursów");
 }
 
-- (void)applicationDidEnterBackground:(UIApplication *)application { [[WLStore shared] save]; }
-- (void)applicationWillTerminate:(UIApplication *)application { [[WLStore shared] save]; }
+- (void)applicationDidEnterBackground:(UIApplication *)application { [[WLStore shared] save]; WLCrumbCleanExit(); }
+- (void)applicationWillTerminate:(UIApplication *)application { [[WLStore shared] save]; WLCrumbCleanExit(); }
 
 @end

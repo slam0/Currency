@@ -4,7 +4,7 @@ Przelicznik walut z **aktualnymi kursami z internetu**, napisany w Objective-C p
 Wygląd taki sam jak w aplikacji Gym: grafit z połyskiem, 6 motywów kolorystycznych (domyślnie Zieleń), 3 języki (polski, English, Русский).
 Kursy zapisują się w telefonie, więc przelicznik działa też bez internetu (na ostatnich pobranych kursach).
 
-## Co potrafi (1.0)
+## Co potrafi (1.0.1)
 
 * **Przelicznik** – wpisujesz kwotę, wybierasz dwie waluty, wynik liczy się od razu. Przycisk ⇅ zamienia waluty miejscami, dotknięcie wyniku kopiuje go do schowka.
   Pod spodem lista tej samej kwoty we wszystkich **ulubionych** walutach (dotknięcie waluty ustawia ją jako docelową).
@@ -36,7 +36,12 @@ Bez niej aplikacja pokaże komunikat „Nie udało się połączyć bezpiecznie 
 
 Każdy kurs jest w tabeli zapisany jako „ile sztuk waluty dostajesz za 1 PLN”. Z NBP to `1 / kurs średni`, z ER-API kurs podzielony przez kurs złotego
 (dzięki temu nie ma znaczenia, jaka waluta była bazowa u dostawcy). Przeliczenie: `kwota × kurs(docelowa) / kurs(źródłowa)`, więc dowolna para walut idzie „przez złotego”.
-Cała ta logika (czytanie JSON, liczenie, zapis kursów, formatowanie kwot, daty, odmiana) jest w `wl_core.c` w czystym C, bez bibliotek, i ma **812 testów** (`tests/core_test.c`).
+Cała ta logika (czytanie JSON, liczenie, zapis kursów, formatowanie kwot, daty, odmiana) jest w `wl_core.c` w czystym C, bez bibliotek, i ma **815 testów** (`tests/core_test.c`).
+
+## Diagnostyka
+
+Aplikacja zapisuje w `Documents` ostatni wykonywany „krok” (`ostatni-krok.txt`) i treść nieobsłużonego błędu (`blad.txt`). Jeśli poprzednie uruchomienie
+zakończyło się awarią, po następnym starcie pokaże okienko „Waluty – diagnostyka” z tą informacją – wystarczy zrobić zdjęcie ekranu. Pliki można też zobaczyć w iTunes → Udostępnianie plików.
 
 ## Budowanie
 

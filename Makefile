@@ -17,7 +17,7 @@ include $(THEOS)/makefiles/common.mk
 
 APPLICATION_NAME = Waluty
 
-Waluty_FILES = main.m AppDelegate.m WLStore.m WLTheme.m WLViews.m WLLang.m WLCurrencies.m WLRates.m WLConverterController.m WLRatesController.m WLPickerController.m WLSettingsController.m wl_core.c wl_libc.c
+Waluty_FILES = main.m AppDelegate.m WLStore.m WLTheme.m WLViews.m WLLang.m WLCurrencies.m WLRates.m WLCrash.m WLConverterController.m WLRatesController.m WLPickerController.m WLSettingsController.m wl_core.c wl_libc.c
 Waluty_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore
 Waluty_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Wno-unused-command-line-argument
 

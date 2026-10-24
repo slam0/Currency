@@ -2,6 +2,7 @@
 #import "WLStore.h"
 #import "WLLang.h"
 #import "wl_core.h"
+#import "WLCrash.h"
 
 NSString *const WLRatesDidChangeNotification = @"WLRatesDidChangeNotification";
 
@@ -137,6 +138,7 @@ NSString *const WLRatesDidChangeNotification = @"WLRatesDidChangeNotification";
 
 - (void)startFetch
 {
+    WLCrumb(@"pobieranie kursów: start");
     _loading = YES;
     _errorText = nil;
     _sawSSLError = _sawLimit = _sawOffline = NO;
@@ -182,6 +184,7 @@ NSString *const WLRatesDidChangeNotification = @"WLRatesDidChangeNotification";
 - (void)handleResponse:(NSURLResponse *)resp data:(NSData *)data error:(NSError *)err source:(int)src
 {
     BOOL ok = NO;
+    WLCrumb(err ? @"pobieranie kursów: błąd sieci" : @"pobieranie kursów: odpowiedź");
     if (err) {
         NSInteger code = [err code];
         if ([[err domain] isEqualToString:NSURLErrorDomain]) {
@@ -196,6 +199,7 @@ NSString *const WLRatesDidChangeNotification = @"WLRatesDidChangeNotification";
             if (text) {
                 wl_table *tmp = (wl_table *)malloc(sizeof(wl_table));
                 if (tmp) {
+                    WLCrumb(@"pobieranie kursów: czytanie");
                     int n = src == WL_SRC_ERAPI ? wl_parse_erapi([text UTF8String], tmp) : wl_parse_nbp([text UTF8String], tmp);
                     if (n > 0) {
                         tmp->fetched = (long)[[NSDate date] timeIntervalSince1970];
@@ -212,12 +216,15 @@ NSString *const WLRatesDidChangeNotification = @"WLRatesDidChangeNotification";
         [self tryStep];
         return;
     }
+    WLCrumb(@"pobieranie kursów: zapis");
     _codes = nil;
     _loading = NO;
     _errorText = nil;
     _lastSuccess = [[NSDate date] timeIntervalSince1970];
     [self saveCache];
+    WLCrumb(@"pobieranie kursów: odświeżanie widoków");
     [self postChange];
+    WLCrumb(@"pobieranie kursów: gotowe");
 }
 
 - (void)saveCache

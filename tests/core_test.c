@@ -62,6 +62,10 @@ int main(void)
     CHECK(wl_parse_nbp("[{\"table\":\"A\",\"rates\":[{\"code\":\"EUR\",\"mid\":4.3}", &t) == -1);   /* ucięte */
     CHECK(wl_parse_nbp("404 NotFound - Not Found - Brak danych", &t) == -1);
     CHECK(wl_parse_nbp(0, &t) == -1);
+    /* uszkodzony element w tablicy nie może zawiesić czytnika (kiedyś pętla bez końca) */
+    CHECK(wl_parse_nbp("[{\"effectiveDate\":\"2024-10-21\",\"rates\":[{\"code\":\"EUR\",\"mid\":4.3}\xef{\"code\":\"USD\",\"mid\":4}]}]", &t) == -1);
+    CHECK(wl_parse_nbp("[{\"rates\":[}]}]", &t) == -1);
+    CHECK(wl_parse_erapi("{\"result\":\"success\",\"rates\":{\"PLN\":1,\"EUR\":}}", &t) == -1);
 
     /* --- ER-API --- */
     n = wl_parse_erapi(ER, &u);

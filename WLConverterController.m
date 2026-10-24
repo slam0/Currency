@@ -7,6 +7,7 @@
 #import "WLCurrencies.h"
 #import "WLPickerController.h"
 #import "wl_core.h"
+#import "WLCrash.h"
 
 @interface WLConverterController ()
 {
@@ -67,6 +68,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    WLCrumb(@"przelicznik: budowa ekranu");
     self.view.backgroundColor = WLBackgroundColor();
     const WLPalette *p = WLP();
     UIColor *fieldText = WLRGB(p->fieldText, 1);
@@ -146,6 +148,7 @@
     _spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(ratesChanged) name:WLRatesDidChangeNotification object:nil];
     [self updateBarButton];
+    WLCrumb(@"przelicznik: ekran zbudowany");
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -277,6 +280,7 @@
 
 - (void)update
 {
+    WLCrumb(@"przelicznik: odświeżanie");
     WLStore *st = [WLStore shared];
     WLRates *r = [WLRates shared];
     NSString *from = st.fromCode, *to = st.toCode;
@@ -299,7 +303,9 @@
         _rateLabel.text = @"";
     }
     [self updateStatus];
+    WLCrumb(@"przelicznik: lista");
     [_table reloadData];
+    WLCrumb(@"przelicznik: gotowy");
 }
 
 /* ---------- lista ulubionych ---------- */
