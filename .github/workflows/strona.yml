@@ -1,6 +1,6 @@
 name: Strona aplikacji
 
-# Publikuje folder site/ jako stronę na GitHub Pages: https://slam0.github.io/Waluty/
+# Publikuje folder site/ jako stronę na GitHub Pages: https://slam0.github.io/Currency/
 # Jednorazowo: Settings -> Pages -> Source: GitHub Actions.
 on:
   push:

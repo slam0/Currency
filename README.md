@@ -7,7 +7,7 @@ Kursy zapisują się w telefonie, więc przelicznik działa też bez internetu (
 
 ## Strona aplikacji
 
-Folder `site/` to strona projektu (`https://slam0.github.io/Waluty/`): szczotkowane aluminium, śrubki, chrom, **jeżdżący pasek z kursami walut w dolarach** na samej górze
+Folder `site/` to strona projektu (`https://slam0.github.io/Currency/`): szczotkowane aluminium, śrubki, chrom, **jeżdżący pasek z kursami walut w dolarach** na samej górze
 (żywe dane z open.er-api.com; gdy brak sieci, pasek pokazuje wyraźnie oznaczone kursy przykładowe), działający przelicznik z wyświetlaczem LCD, opis, podgląd i instrukcja instalacji.
 Trzy języki (PL/EN/RU), działa też w Safari z iOS 6 (zwykły JavaScript, prefiksy `-webkit-`).
 Publikuje ją workflow **Strona aplikacji** (`.github/workflows/strona.yml`). Jednorazowo: Settings → Pages → Source: **GitHub Actions**.
@@ -78,8 +78,8 @@ zakończyło się awarią, po następnym starcie pokaże okienko „Waluty – d
 
 1. Wgraj całą zawartość tego folderu do nowego publicznego repozytorium **Waluty** na GitHubie (folder `.github` jest ukryty – w Finderze Cmd+Shift+.).
 2. Settings → Actions → General → Workflow permissions → **Read and write permissions**.
-3. Actions → **Zbuduj aplikację** → Run workflow (nie „Re-run all jobs”). Powstają `Waluty.ipa` i `.deb`, które trafiają do wydania `najnowsza`.
-4. Żeby aplikacja była w Cydii: dopisz `slam0/Waluty` do pliku `projekty.txt` w repozytorium `cydia` i wgraj `Resources/Icon@2x.png` jako `site/icons/waluty.png` (adres ikony jest w pliku `control`).
+3. Actions → **Zbuduj aplikację** → Run workflow (nie „Re-run all jobs”). Powstają `Currency.ipa` i `.deb`, które trafiają do wydania `najnowsza`.
+4. Żeby aplikacja była w Cydii: dopisz `slam0/Currency` do pliku `projekty.txt` w repozytorium `cydia` i wgraj `Resources/Icon@2x.png` jako `site/icons/currency.png` (adres ikony jest w pliku `control`).
 
 Lokalnie: `./build.sh` (potrzebny Theos), testy logiki: `gcc -Wall wl_core.c tests/core_test.c -lm && ./a.out`.
 Ikona i ekrany startowe powstają ze skryptu `python3 tools/make_images.py` (Pillow).
