@@ -1,10 +1,34 @@
-# Waluty – przelicznik walut na iOS 6
+# Currency (Waluty) – przelicznik walut na iOS 6
 
 Przelicznik walut z **aktualnymi kursami z internetu**, napisany w Objective-C pod iOS 6 (jailbreak), budowany w Theosie na GitHubie.
-Wygląd taki sam jak w aplikacji Gym: grafit z połyskiem, 6 motywów kolorystycznych (domyślnie Zieleń), 3 języki (polski, English, Русский).
+Wygląd w stylu iOS 6, na maksa skeuomorficzny: domyślny motyw **Aluminium** (szczotkowany metal, chrom, śrubki, wyświetlacze LCD z cyframi siedmiosegmentowymi)
+oraz 6 motywów z grafitem i kolorami (Grafit, Błękit, Czerwień, Zieleń, Fiolet, Srebro), 3 języki (polski, English, Русский).
 Kursy zapisują się w telefonie, więc przelicznik działa też bez internetu (na ostatnich pobranych kursach).
 
-## Co potrafi (1.0.2)
+## Co nowego w 1.1.4
+
+* **Nowa ikona**: srebrne monety € i $ na szczotkowanym aluminium (źródło: `tools/icon-zrodlo.png`, skrypt `tools/make_images.py` wycina kwadrat i skaluje do wszystkich rozmiarów).
+
+## Co nowego w 1.1.3
+
+* **Nazwa i identyfikator zmienione na „Currency”**: podpis pod ikoną, nazwa w Cydii, pakiet `com.nazar0vsky.currency`, plik wykonywalny `Currency`, `Currency.ipa`. Pakiet ma wpis `Replaces/Conflicts` dla starego `com.nazar0vsky.waluty`, więc Cydia sama usunie starą „Walutę”. Ustawienia i ulubione ze starej wersji nie przenoszą się (to nowa aplikacja z własnym folderem danych).
+
+## Co nowego w 1.1.2
+
+* **Nowy ekran powitalny** – własny projekt z Canvy: szczotkowane aluminium z bladym wzorem banknotu, srebrne monety, napis „Currency” i podpis nazarOvsky 2024-2026. Plik źródłowy: `tools/splash-canva.png` (640×1136); wersję dla iPhone'a 4 skrypt `tools/make_images.py` przycina i przesuwa napis na dole sam.
+
+## Co nowego w 1.1.0 – Aluminium
+
+* **Przelicznik jak urządzenie**: srebrna płyta ze śrubkami w rogach i rowkiem pośrodku, dwa wyświetlacze LCD (kwota i wynik) z cyframi siedmiosegmentowymi
+  (jasnozielone szkło i ciemne segmenty, „ósemki” w tle, połysk szkła, w ciemnych motywach świecące segmenty w kolorze motywu), chromowane przyciski walut i zamiany.
+  Dotknięcie wyświetlacza z kwotą otwiera klawiaturę (kursor miga), dotknięcie wyniku kopiuje go do schowka.
+* **Szczotkowany metal** wszędzie: tło, paski u góry i na dole (z wytłoczonymi ikonami i napisami), paski list, nagłówki sekcji (ciemne płytki ze śrubkami).
+* Motyw Aluminium jest pierwszy na liście i po aktualizacji ustawia się sam; wcześniejsze motywy dalej są do wyboru w Ustawieniach.
+* Nowa ikona i ekran startowy (srebrne monety na szczotkowanym aluminium).
+
+Podgląd makiety: `podglad-aluminium.png` (rysowany skryptem `tools/preview_metal.py` tymi samymi kolorami i wymiarami co w aplikacji).
+
+## Co potrafi (od 1.0)
 
 * **Przelicznik** – wpisujesz kwotę, wybierasz dwie waluty, wynik liczy się od razu. Przycisk ⇅ zamienia waluty miejscami, dotknięcie wyniku kopiuje go do schowka.
   Pod spodem lista tej samej kwoty we wszystkich **ulubionych** walutach (dotknięcie waluty ustawia ją jako docelową).
@@ -58,6 +82,8 @@ Ikona i ekrany startowe powstają ze skryptu `python3 tools/make_images.py` (Pil
 | Plik | Rola |
 |---|---|
 | `wl_core.*` | czysta logika w C: czytanie odpowiedzi ER-API i NBP, tabela kursów, przeliczanie, zapis/odczyt pamięci podręcznej, parsowanie i formatowanie kwot, daty, odmiana |
+| `wl_seg.*` | geometria cyfr siedmiosegmentowych (segmenty, układ napisu) w czystym C; testy w `tests/seg_test.c` |
+| `WLMetal.*` | rysowanie metalu: smugi szczotkowania, śrubki, chrom, płyta (`WLPlateView`) i wyświetlacz LCD (`WLLCDView`) |
 | `wl_libc.c` | własne `memcpy`/`memset`… (zastępcze pliki SDK z GitHuba ich nie mają) |
 | `WLRates.*` | pobieranie kursów (`NSURLConnection`), kolejność źródeł, obsługa błędów, plik `Documents/kursy.txt` |
 | `WLStore.*` | ustawienia i stan w `Documents/waluty.json`: język, motyw, źródło, ostatnie waluty i kwota, ulubione |

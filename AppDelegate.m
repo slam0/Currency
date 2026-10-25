@@ -85,7 +85,7 @@
     }
     if (lastReport) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Waluty – diagnostyka" message:lastReport delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+            UIAlertView *a = [[UIAlertView alloc] initWithTitle:@"Currency – diagnostyka" message:lastReport delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
             [a show];
         });
     }
