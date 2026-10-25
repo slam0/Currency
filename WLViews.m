@@ -1,7 +1,6 @@
 #import "WLViews.h"
 #import "WLTheme.h"
 #import "WLLang.h"
-#import "WLMetal.h"
 
 static UIColor *C(int r, int g, int b, CGFloat a)
 {
@@ -48,13 +47,6 @@ static void Gradient(CGContextRef c, CGRect r, UIColor *top, UIColor *bottom)
     } else {
         Gradient(c, CGRectMake(0, 0, b.size.width, half), WLRGB(p->cellT1, 1), WLRGB(p->cellT2, 1));
         Gradient(c, CGRectMake(0, half, b.size.width, b.size.height - half), WLRGB(p->cellB1, 1), WLRGB(p->cellB2, 1));
-    }
-    if (p->metal && !_selected) {
-        /* szczotkowany metal: delikatne smugi na całym pasku */
-        CGContextSaveGState(c);
-        CGContextSetAlpha(c, 0.7f);
-        [WLBrushedOverlay() drawAsPatternInRect:b];
-        CGContextRestoreGState(c);
     }
     [C(255, 255, 255, p->cellHiAlpha) setFill];
     CGContextFillRect(c, CGRectMake(0, 0, b.size.width, 1));
@@ -117,19 +109,7 @@ static void Gradient(CGContextRef c, CGRect r, UIColor *top, UIColor *bottom)
     CGContextRef c = UIGraphicsGetCurrentContext();
     CGRect b = self.bounds;
     const WLPalette *p = WLP();
-    CGFloat left = 12.0f, rightInset = 12.0f;
-    if (p->metal) {
-        /* ciemna, szczotkowana płytka ze śrubkami po bokach */
-        NSArray *cols = [NSArray arrayWithObjects:(__bridge id)WLRGB(p->hdrT, 1).CGColor, (__bridge id)WLRGB(p->hdrB, 1).CGColor, nil];
-        WLMetalFill(c, b, cols, NULL, 0.8f);
-        UIImage *sc = WLScrewImage(7.0f, 1), *sc2 = WLScrewImage(7.0f, 3);
-        [sc drawAtPoint:CGPointMake(13 - sc.size.width / 2, b.size.height / 2 - sc.size.height / 2)];
-        [sc2 drawAtPoint:CGPointMake(b.size.width - 13 - sc2.size.width / 2, b.size.height / 2 - sc2.size.height / 2)];
-        left = 28.0f;
-        rightInset = 28.0f;
-    } else {
-        Gradient(c, b, WLRGB(p->hdrT, 0.97f), WLRGB(p->hdrB, 0.97f));
-    }
+    Gradient(c, b, WLRGB(p->hdrT, 0.97f), WLRGB(p->hdrB, 0.97f));
     [C(255, 255, 255, p->light ? 0.35f : 0.10f) setFill];
     CGContextFillRect(c, CGRectMake(0, 0, b.size.width, 1));
     [C(0, 0, 0, 0.8f) setFill];
@@ -137,10 +117,10 @@ static void Gradient(CGContextRef c, CGRect r, UIColor *top, UIColor *bottom)
     UIFont *f = [UIFont boldSystemFontOfSize:13.0f];
     CGContextSetShadowWithColor(c, CGSizeMake(0, -1), 0, C(0, 0, 0, p->light ? 0.45f : 0.9f).CGColor);
     [WLRGB(p->hdrTitle, 1) set];
-    [_title drawInRect:CGRectMake(left, 5, b.size.width - 100 - (left - 12), 18) withFont:f lineBreakMode:NSLineBreakByTruncatingTail];
+    [_title drawInRect:CGRectMake(12, 5, b.size.width - 100, 18) withFont:f lineBreakMode:NSLineBreakByTruncatingTail];
     if ([_right length]) {
         [WLRGB(p->hdrRight, 1) set];
-        [_right drawInRect:CGRectMake(b.size.width - 148 - rightInset, 5, 148, 18) withFont:f lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentRight];
+        [_right drawInRect:CGRectMake(b.size.width - 160, 5, 148, 18) withFont:f lineBreakMode:NSLineBreakByTruncatingTail alignment:NSTextAlignmentRight];
     }
 }
 @end
@@ -257,7 +237,7 @@ UIImage *WLTriangleImage(void)
     [p addLineToPoint:CGPointMake(11, 1)];
     [p addLineToPoint:CGPointMake(6, 7)];
     [p closePath];
-    [WLGlyphColor() setFill];
+    [[UIColor whiteColor] setFill];
     [p fill];
     UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
@@ -268,8 +248,8 @@ UIImage *WLTriangleImage(void)
 UIImage *WLSwapImage(void)
 {
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(26, 22), NO, 0.0f);
-    [WLGlyphColor() setFill];
-    [WLGlyphColor() setStroke];
+    [[UIColor whiteColor] setFill];
+    [[UIColor whiteColor] setStroke];
     UIBezierPath *l = [UIBezierPath bezierPath];
     [l moveToPoint:CGPointMake(8, 19)];
     [l addLineToPoint:CGPointMake(8, 7)];

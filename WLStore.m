@@ -60,13 +60,8 @@
     if (![[_root objectForKey:@"favorites"] isKindOfClass:[NSArray class]]) {
         [_root setObject:[NSMutableArray arrayWithArray:[WLStore defaultFavorites]] forKey:@"favorites"];
     }
-    for (NSString *k in [NSArray arrayWithObjects:@"lang", @"theme", @"source", @"skin", nil]) {
-        if (![[_root objectForKey:k] isKindOfClass:[NSNumber class]]) [_root setObject:[NSNumber numberWithInteger:0] forKey:k];
-    }
-    /* wersja 1.1.0: nowy motyw Aluminium jest pierwszy na liście i raz ustawiamy go wszystkim; potem można wybrać inny */
-    if ([[_root objectForKey:@"skin"] integerValue] < 1) {
-        [_root setObject:[NSNumber numberWithInteger:0] forKey:@"theme"];
-        [_root setObject:[NSNumber numberWithInteger:1] forKey:@"skin"];
+    for (NSString *k in [NSArray arrayWithObjects:@"lang", @"theme", @"source", nil]) {
+        if (![[_root objectForKey:k] isKindOfClass:[NSNumber class]]) [_root setObject:[NSNumber numberWithInteger:([k isEqualToString:@"theme"] ? 3 : 0)] forKey:k];
     }
 }
 

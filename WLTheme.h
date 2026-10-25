@@ -19,12 +19,6 @@ typedef struct {
     int shadow[3], chrome[3], danger[3];
     float gridAlpha, shadowAlpha, shadowDY, cellHiAlpha, cellLoAlpha;
     int light;
-    /* skeuomorfizm: płyta z wyświetlaczami, chrom, szczotkowany metal */
-    int metal;                                  /* 1 = motyw Aluminium (wszystko ze szczotkowanego srebra) */
-    int plateT[3], plateM[3], plateB[3];        /* płyta z wyświetlaczami */
-    int lcdFrameT[3], lcdFrameB[3], lcdT[3], lcdB[3], lcdOn[3];
-    int chromeText[3];                          /* kolor napisu na przycisku (chrom albo żel) */
-    float lcdOffAlpha, texAmp;                  /* krycie nieaktywnych segmentów; siła smug szczotkowania */
 } WLPalette;
 
 const WLPalette *WLP(void);
@@ -36,8 +30,6 @@ NSInteger WLCurrentTheme(void);
 void WLSetTheme(NSInteger index);               /* zapisuje i ogłasza WLAppearanceDidChangeNotification */
 NSString *WLThemeName(NSInteger index);         /* przetłumaczona nazwa */
 UIImage *WLThemeSwatch(NSInteger index);        /* mała błyszcząca próbka koloru */
-UIActivityIndicatorViewStyle WLSpinnerStyle(void);   /* kółko ładowania widoczne na pasku motywu */
-UIColor *WLGlyphColor(void);            /* kolor małych ikon na przyciskach (strzałki, trójkąt) */
 
 UIColor *WLBackgroundColor(void);       /* teksturowane tło tabel */
 UIColor *WLTextColor(void);

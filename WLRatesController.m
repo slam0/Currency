@@ -78,7 +78,7 @@ static NSString *Fold(NSString *s)
     [_footer addSubview:_footerButton];
     _table.tableFooterView = _footer;
 
-    _spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:WLSpinnerStyle()];
+    _spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(ratesChanged) name:WLRatesDidChangeNotification object:nil];
     [self updateBarButtons];
 }

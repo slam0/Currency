@@ -8,15 +8,14 @@
 #import "WLPickerController.h"
 #import "wl_core.h"
 #import "WLCrash.h"
-#import "WLMetal.h"
 
 @interface WLConverterController ()
 {
     UITableView *_table;
     UIView *_head;
-    WLPlateView *_plate;
-    UITextField *_field;                    /* niewidoczne pole tekstowe: zbiera wpisywanie, a kwotę pokazuje wyświetlacz */
-    WLLCDView *_amountLCD, *_resultLCD;
+    UITextField *_field;
+    UIImageView *_resultTile;
+    UILabel *_resultLabel;
     UIButton *_fromButton, *_toButton;
     UILabel *_fromName, *_toName, *_rateLabel, *_statusLabel;
     UIActivityIndicatorView *_spinner;
@@ -56,9 +55,9 @@
 {
     UIButton *b = WLGelButton(@"", 0, f);
     b.titleLabel.font = [UIFont boldSystemFontOfSize:20.0f];
-    b.titleEdgeInsets = UIEdgeInsetsMake(0, -6, 0, 18);
+    b.titleEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 14);
     UIImageView *tri = [[UIImageView alloc] initWithImage:WLTriangleImage()];
-    tri.frame = CGRectMake(f.size.width - 24, (f.size.height - 8) / 2, 12, 8);
+    tri.frame = CGRectMake(f.size.width - 22, (f.size.height - 8) / 2, 12, 8);
     tri.alpha = 0.9f;
     [b addSubview:tri];
     [b addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];
@@ -71,74 +70,70 @@
     [super viewDidLoad];
     WLCrumb(@"przelicznik: budowa ekranu");
     self.view.backgroundColor = WLBackgroundColor();
-    _head = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 282)];
+    const WLPalette *p = WLP();
+    UIColor *fieldText = WLRGB(p->fieldText, 1);
+
+    _head = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 246)];
     _head.autoresizingMask = UIViewAutoresizingFlexibleWidth;
 
-    /* płyta z wyświetlaczami (współrzędne wewnątrz płyty) */
-    _plate = [[WLPlateView alloc] initWithFrame:CGRectMake(8, 8, 304, 198)];
-    _plate.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    _plate.grooveY = 99.0f;
-    [_head addSubview:_plate];
-
-    UILabel *lab1 = [self labelAt:CGRectMake(26, 11, 200, 14) size:10.0f bold:YES color:WLSubtleColor() align:NSTextAlignmentLeft];
-    lab1.text = [GL(@"Kwota") uppercaseStringWithLocale:WLLocale()];
-    lab1.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
-    WLStyleShadow(lab1);
-    [_plate addSubview:lab1];
-    UILabel *lab2 = [self labelAt:CGRectMake(26, 116, 200, 14) size:10.0f bold:YES color:WLSubtleColor() align:NSTextAlignmentLeft];
-    lab2.text = [GL(@"Wynik") uppercaseStringWithLocale:WLLocale()];
-    lab2.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
-    WLStyleShadow(lab2);
-    [_plate addSubview:lab2];
-
-    /* kwota: wyświetlacz + niewidoczne pole; dotknięcie wyświetlacza otwiera klawiaturę */
-    _amountLCD = [[WLLCDView alloc] initWithFrame:CGRectMake(16, 26, 190, 46)];
-    _amountLCD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    [_amountLCD addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(focusAmount)]];
-    [_plate addSubview:_amountLCD];
-
-    _field = [[UITextField alloc] initWithFrame:CGRectMake(-80, 0, 60, 30)];
+    _field = [[UITextField alloc] initWithFrame:CGRectMake(12, 14, 190, 46)];
+    _field.background = WLFieldImage();
     _field.borderStyle = UITextBorderStyleNone;
+    _field.font = [UIFont boldSystemFontOfSize:24.0f];
+    _field.textColor = fieldText;
+    _field.textAlignment = NSTextAlignmentRight;
+    _field.contentVerticalAlignment = UIControlContentVerticalAlignmentCenter;
     _field.keyboardType = UIKeyboardTypeDecimalPad;
     _field.keyboardAppearance = UIKeyboardAppearanceAlert;
+    _field.adjustsFontSizeToFitWidth = YES;
+    _field.minimumFontSize = 14.0f;
+    _field.placeholder = @"0";
     _field.delegate = self;
     _field.inputAccessoryView = WLKeyboardToolbar(self, @selector(dismissKeyboard));
+    UIView *pad = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
+    _field.leftView = pad;
+    _field.leftViewMode = UITextFieldViewModeAlways;
+    UIView *pad2 = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
+    _field.rightView = pad2;
+    _field.rightViewMode = UITextFieldViewModeAlways;
     [_field addTarget:self action:@selector(amountChanged) forControlEvents:UIControlEventEditingChanged];
     [_head addSubview:_field];
 
-    _fromButton = [self currencyButtonAt:CGRectMake(214, 26, 82, 46) action:@selector(pickFrom)];
-    [_plate addSubview:_fromButton];
-    _fromName = [self labelAt:CGRectMake(20, 76, 250, 16) size:12.0f bold:NO color:WLSubtleColor() align:NSTextAlignmentLeft];
+    _fromButton = [self currencyButtonAt:CGRectMake(210, 14, 98, 46) action:@selector(pickFrom)];
+    [_head addSubview:_fromButton];
+    _fromName = [self labelAt:CGRectMake(16, 62, 150, 16) size:12.0f bold:NO color:WLSubtleColor() align:NSTextAlignmentLeft];
     _fromName.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
-    WLStyleShadow(_fromName);
-    [_plate addSubview:_fromName];
+    [_head addSubview:_fromName];
 
-    UIButton *swap = WLGelButton(@"", 1, CGRectMake(126, 84, 52, 30));
+    UIButton *swap = WLGelButton(@"", 1, CGRectMake(136, 66, 48, 34));
     [swap setImage:WLSwapImage() forState:UIControlStateNormal];
     [swap addTarget:self action:@selector(swapCurrencies) forControlEvents:UIControlEventTouchUpInside];
     swap.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-    [_plate addSubview:swap];
+    [_head addSubview:swap];
 
-    /* wynik: wyświetlacz; dotknięcie kopiuje wynik do schowka */
-    _resultLCD = [[WLLCDView alloc] initWithFrame:CGRectMake(16, 131, 190, 46)];
-    _resultLCD.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-    [_resultLCD addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(copyResult)]];
-    [_plate addSubview:_resultLCD];
+    _resultTile = [[UIImageView alloc] initWithImage:WLFieldImage()];
+    _resultTile.frame = CGRectMake(12, 108, 190, 46);
+    _resultTile.userInteractionEnabled = YES;
+    [_head addSubview:_resultTile];
+    _resultLabel = [self labelAt:CGRectMake(10, 0, 170, 46) size:24.0f bold:YES color:fieldText align:NSTextAlignmentRight];
+    _resultLabel.adjustsFontSizeToFitWidth = YES;
+    _resultLabel.minimumScaleFactor = 0.55f;
+    _resultLabel.autoresizingMask = UIViewAutoresizingNone;
+    [_resultTile addSubview:_resultLabel];
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(copyResult)];
+    [_resultTile addGestureRecognizer:tap];
 
-    _toButton = [self currencyButtonAt:CGRectMake(214, 131, 82, 46) action:@selector(pickTo)];
-    [_plate addSubview:_toButton];
-    _toName = [self labelAt:CGRectMake(20, 181, 250, 14) size:12.0f bold:NO color:WLSubtleColor() align:NSTextAlignmentLeft];
-    _toName.autoresizingMask = UIViewAutoresizingFlexibleRightMargin;
-    WLStyleShadow(_toName);
-    [_plate addSubview:_toName];
+    _toButton = [self currencyButtonAt:CGRectMake(210, 108, 98, 46) action:@selector(pickTo)];
+    [_head addSubview:_toButton];
+    _toName = [self labelAt:CGRectMake(16, 156, 290, 16) size:12.0f bold:NO color:WLSubtleColor() align:NSTextAlignmentLeft];
+    [_head addSubview:_toName];
 
-    _rateLabel = [self labelAt:CGRectMake(12, 216, 296, 20) size:15.0f bold:YES color:WLTextColor() align:NSTextAlignmentCenter];
+    _rateLabel = [self labelAt:CGRectMake(12, 176, 296, 20) size:15.0f bold:YES color:WLTextColor() align:NSTextAlignmentCenter];
     WLStyleShadow(_rateLabel);
     [_head addSubview:_rateLabel];
 
-    _statusLabel = [self labelAt:CGRectMake(12, 238, 296, 40) size:12.0f bold:NO color:WLSubtleColor() align:NSTextAlignmentCenter];
+    _statusLabel = [self labelAt:CGRectMake(12, 198, 296, 44) size:12.0f bold:NO color:WLSubtleColor() align:NSTextAlignmentCenter];
     _statusLabel.numberOfLines = 3;
-    WLStyleShadow(_statusLabel);
     [_head addSubview:_statusLabel];
 
     _table = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
@@ -150,7 +145,7 @@
     WLStyleTable(_table);
     [self.view addSubview:_table];
 
-    _spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:WLSpinnerStyle()];
+    _spinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(ratesChanged) name:WLRatesDidChangeNotification object:nil];
     [self updateBarButton];
     WLCrumb(@"przelicznik: ekran zbudowany");
@@ -172,10 +167,6 @@
 /* ---------- działania ---------- */
 
 - (void)dismissKeyboard { [_field resignFirstResponder]; }
-- (void)focusAmount { [_field becomeFirstResponder]; }
-
-- (void)textFieldDidBeginEditing:(UITextField *)tf { _amountLCD.showsCursor = YES; }
-- (void)textFieldDidEndEditing:(UITextField *)tf { _amountLCD.showsCursor = NO; }
 
 - (void)amountChanged
 {
@@ -303,8 +294,7 @@
     double out = 0.0;
     _hasResult = amt >= 0.0 && [r convert:amt from:from to:to result:&out];
     _lastResult = out;
-    _amountLCD.text = [txt length] ? txt : @"0";
-    _resultLCD.text = _hasResult ? WLMoneyString(out) : @"—";
+    _resultLabel.text = _hasResult ? WLMoneyString(out) : @"—";
 
     double one;
     if ([r convert:1.0 from:from to:to result:&one]) {
