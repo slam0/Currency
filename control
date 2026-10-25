@@ -1,7 +1,7 @@
 Package: com.nazar0vsky.waluty
 Name: Waluty
 Depends: firmware (>= 6.0)
-Version: 1.0.2
+Version: 1.1.0
 Architecture: iphoneos-arm
 Description: Przelicznik walut z aktualnymi kursami z internetu (ER-API i NBP), zapisanymi do pracy bez sieci
 Maintainer: nazar0vsky-slam0

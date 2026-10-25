@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Rysuje ikonę i ekrany startowe aplikacji (Resources/*.png). Wymaga Pillow: pip install pillow."""
 import math, os, sys
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageChops
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Resources")
 FONT_DIR = "/usr/share/fonts/opentype/inter/"
 NAME = "Waluty"
 FOOT = "nazarOvsky 2024-2026"
-ACCENT_T, ACCENT_B = (140, 220, 105), (40, 140, 40)       # zielony żel (motyw Zieleń)
+ACCENT_T, ACCENT_B = (250, 251, 252), (160, 167, 178)       # srebrny chrom (motyw Aluminium)
 
 def font(name, size):
     for p in (FONT_DIR + name, "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"):
@@ -63,27 +64,53 @@ def coin(base, cx, cy, r, glyph, top, bot, rim_top, rim_bot, gfont):
     bb = d.textbbox((0, 0), glyph, font=gfont)
     tw, th = bb[2] - bb[0], bb[3] - bb[1]
     tx, ty = cx - tw / 2 - bb[0], cy - th / 2 - bb[1]
-    d.text((tx, ty + S * 0.008), glyph, font=gfont, fill=(20, 70, 20))
-    d.text((tx, ty), glyph, font=gfont, fill=(250, 255, 245))
+    d.text((tx, ty + S * 0.006), glyph, font=gfont, fill=(255, 255, 255))
+    d.text((tx, ty), glyph, font=gfont, fill=(70, 77, 90))
+
+def brushed_bg(S):
+    """szczotkowane aluminium: pionowy gradient i poziome smugi"""
+    g = vgrad((S, S), (214, 218, 224), (112, 119, 131))
+    a = np.asarray(g).astype(np.float32)
+    rng = np.random.RandomState(5)
+    n = rng.randn(S, S).astype(np.float32)
+    k = np.ones(90, dtype=np.float32) / 90
+    for y in range(S):
+        n[y] = np.convolve(n[y], k, mode="same")
+    n = n / (n.std() + 1e-6) * 5.0
+    a = np.clip(a + n[:, :, None], 0, 255).astype(np.uint8)
+    return Image.fromarray(a, "RGB")
+
+def screw(img, cx, cy, r):
+    d = ImageDraw.Draw(img)
+    d.ellipse([cx - r - 3, cy - r - 1, cx + r + 3, cy + r + 5], fill=(255, 255, 255))
+    d.ellipse([cx - r - 2, cy - r - 2, cx + r + 2, cy + r + 2], fill=(70, 76, 88))
+    size = int(2 * r)
+    yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
+    dist = np.sqrt(((xx - r) / r + 0.35) ** 2 + ((yy - r) / r + 0.4) ** 2)
+    t = np.clip(dist / 1.3, 0, 1)[:, :, None]
+    col = np.array([252, 253, 254], np.float32) * (1 - t) + np.array([120, 127, 138], np.float32) * t
+    m = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(m).ellipse([0, 0, size - 1, size - 1], fill=255)
+    img.paste(Image.fromarray(col.astype(np.uint8), "RGB"), (int(cx - r), int(cy - r)), m)
+    w = max(2, int(r * 0.18))
+    d.rectangle([cx - r * 0.7, cy - w, cx + r * 0.7, cy + w], fill=(58, 64, 76))
+    d.rectangle([cx - w, cy - r * 0.7, cx + w, cy + r * 0.7], fill=(58, 64, 76))
 
 def make_icon(S=1024):
-    img = vgrad((S, S), (92, 94, 98), (14, 14, 16))
-    # zielona poświata pośrodku
-    glow = Image.new("L", (S, S), 0)
-    ImageDraw.Draw(glow).ellipse([S * 0.18, S * 0.30, S * 0.82, S * 0.82], fill=150)
-    glow = glow.filter(ImageFilter.GaussianBlur(S * 0.10))
-    img.paste((70, 190, 70), (0, 0), glow.point(lambda v: int(v * 0.55)))
+    img = brushed_bg(S)
     gfont = font("Inter-Black.otf", int(S * 0.34))
-    # tylna moneta (dolar), przednia (euro)
-    coin(img, S * 0.60, S * 0.38, S * 0.25, "$", (110, 150, 110), (30, 80, 35), (205, 215, 205), (90, 100, 90), gfont)
-    coin(img, S * 0.40, S * 0.60, S * 0.28, "€", ACCENT_T, ACCENT_B, (235, 240, 235), (110, 120, 110), gfont)
+    # tylna moneta (dolar), przednia (euro) - srebrne, z metaliczną obwódką
+    coin(img, S * 0.60, S * 0.38, S * 0.25, "$", (232, 235, 240), (150, 157, 168), (250, 251, 252), (110, 117, 128), gfont)
+    coin(img, S * 0.40, S * 0.60, S * 0.28, "€", ACCENT_T, ACCENT_B, (255, 255, 255), (118, 125, 136), gfont)
+    # śrubki w rogach
+    for (x, y) in ((0.09, 0.09), (0.91, 0.09), (0.09, 0.91), (0.91, 0.91)):
+        screw(img, S * x, S * y, S * 0.028)
     # szklany połysk na górnej połowie
     gloss = Image.new("L", (S, S), 0)
     gd = ImageDraw.Draw(gloss)
     gd.ellipse([-S * 0.35, -S * 1.05, S * 1.35, S * 0.52], fill=255)
     gloss = gloss.filter(ImageFilter.GaussianBlur(S * 0.004))
-    topfade = vgrad((S, S), (255, 255, 255), (255, 255, 255)).convert("L")
-    img.paste((255, 255, 255), (0, 0), gloss.point(lambda v: int(v * 0.22)))
+    img.paste((255, 255, 255), (0, 0), gloss.point(lambda v: int(v * 0.30)))
     return img
 
 def save_resized(img, size, name):

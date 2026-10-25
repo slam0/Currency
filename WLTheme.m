@@ -2,18 +2,21 @@
 #import "WLStore.h"
 #import "WLLang.h"
 #import "wl_core.h"
+#import "WLMetal.h"
 
 /* ---------- paleta i motywy ---------- */
 
-#define NTHEMES 6
+#define NTHEMES 7
 
-static const struct { NSString *name; int accent[3]; int light; } kThemes[NTHEMES] = {
-    { @"Grafit",   { 255, 138,   0 }, 0 },
-    { @"Błękit",   {  40, 150, 255 }, 0 },
-    { @"Czerwień", { 240,  70,  70 }, 0 },
-    { @"Zieleń",   {  90, 200,  70 }, 0 },
-    { @"Fiolet",   { 170, 110, 255 }, 0 },
-    { @"Srebro",   {  22, 118, 220 }, 1 },
+/* metal: 0 zwykły, 1 szczotkowane aluminium (pełny skeuomorfizm) */
+static const struct { NSString *name; int accent[3]; int light; int metal; } kThemes[NTHEMES] = {
+    { @"Aluminium", {  22, 118, 220 }, 1, 1 },
+    { @"Grafit",    { 255, 138,   0 }, 0, 0 },
+    { @"Błękit",    {  40, 150, 255 }, 0, 0 },
+    { @"Czerwień",  { 240,  70,  70 }, 0, 0 },
+    { @"Zieleń",    {  90, 200,  70 }, 0, 0 },
+    { @"Fiolet",    { 170, 110, 255 }, 0, 0 },
+    { @"Srebro",    {  22, 118, 220 }, 1, 0 },
 };
 
 static WLPalette gPal;
@@ -33,6 +36,7 @@ static void BuildPalette(NSInteger theme, WLPalette *p)
     { unsigned char *raw = (unsigned char *)p; for (size_t i = 0; i < sizeof(*p); i++) raw[i] = 0; }
     const int white[3] = { 255, 255, 255 }, black[3] = { 0, 0, 0 };
     p->light = kThemes[theme].light;
+    p->metal = kThemes[theme].metal;
     for (int i = 0; i < 3; i++) p->accent[i] = kThemes[theme].accent[i];
     if (!p->light) {
         SET(p->bg, 34, 36, 40);    SET(p->bgHi, 40, 42, 47);  SET(p->bgLo, 30, 32, 36);
@@ -49,7 +53,7 @@ static void BuildPalette(NSInteger theme, WLPalette *p)
         SET(p->shadow, 0, 0, 0); SET(p->chrome, 26, 28, 33); SET(p->danger, 255, 115, 115);
         p->gridAlpha = 0.07f; p->shadowAlpha = 0.8f; p->shadowDY = -1.0f; p->cellHiAlpha = 0.14f; p->cellLoAlpha = 0.55f;
         /* delikatne przebarwienie grafitu kolorem motywu (poza pierwszym, czystym grafitem) */
-        if (theme != 0) {
+        if (theme != 1) {
             int *group[] = { p->bg, p->bgHi, p->bgLo, p->barT1, p->barT2, p->barB1, p->barB2, p->barTint, p->cellT1, p->cellT2,
                              p->cellB1, p->cellB2, p->hdrT, p->hdrB, p->fieldT, p->fieldB, p->tileT, p->tileB, p->panelT, p->panelB,
                              p->sep, p->neutT, p->neutB, p->neutBorder, p->chrome };
@@ -75,6 +79,36 @@ static void BuildPalette(NSInteger theme, WLPalette *p)
         p->gridAlpha = 0.09f; p->shadowAlpha = 0.9f; p->shadowDY = 1.0f; p->cellHiAlpha = 0.9f; p->cellLoAlpha = 0.16f;
         Mix(p->selT1, p->accent, black, 0.05f); Mix(p->selT2, p->accent, black, 0.15f);
         Mix(p->selB1, p->accent, black, 0.25f); Mix(p->selB2, p->accent, black, 0.30f);
+    }
+    /* płyta, wyświetlacz LCD i chrom */
+    if (p->metal) {
+        SET(p->bg, 198, 202, 208);
+        SET(p->barT1, 244, 246, 248); SET(p->barT2, 206, 211, 218); SET(p->barB1, 190, 196, 205); SET(p->barB2, 160, 166, 176);
+        SET(p->barTint, 160, 167, 178);
+        SET(p->subtle, 92, 99, 112); SET(p->tabOff, 84, 90, 102); SET(p->tabOn, 22, 118, 220);
+        SET(p->hdrT, 92, 98, 110); SET(p->hdrB, 56, 61, 70); SET(p->hdrTitle, 236, 240, 245); SET(p->hdrRight, 190, 197, 208);
+        SET(p->sep, 168, 173, 182);
+        SET(p->plateT, 248, 249, 250); SET(p->plateM, 226, 229, 234); SET(p->plateB, 196, 201, 209);
+        SET(p->chromeText, 40, 45, 54);
+        p->texAmp = 1.0f;
+    } else if (p->light) {
+        SET(p->plateT, 253, 254, 255); SET(p->plateM, 238, 241, 245); SET(p->plateB, 214, 219, 226);
+        SET(p->chromeText, 255, 255, 255);
+    } else {
+        SET(p->plateT, 98, 102, 112); SET(p->plateM, 70, 73, 81); SET(p->plateB, 46, 48, 54);
+        SET(p->chromeText, 255, 255, 255);
+    }
+    if (p->light) {
+        /* klasyczny kalkulatorowy LCD: jasnozielone szkło i ciemne segmenty */
+        SET(p->lcdFrameT, 96, 102, 114); SET(p->lcdFrameB, 214, 219, 226);
+        SET(p->lcdT, 166, 184, 148); SET(p->lcdB, 194, 209, 172); SET(p->lcdOn, 26, 34, 24);
+        p->lcdOffAlpha = 0.10f;
+    } else {
+        /* ciemne szkło i świecące segmenty w kolorze motywu */
+        SET(p->lcdFrameT, 6, 7, 9); SET(p->lcdFrameB, 88, 92, 102);
+        SET(p->lcdT, 8, 11, 11); SET(p->lcdB, 22, 27, 27);
+        Copy3(p->lcdOn, p->accent);
+        p->lcdOffAlpha = 0.09f;
     }
     Mix(p->accentGelT, p->accent, white, 0.25f);
     Mix(p->accentGelB, p->accent, black, 0.18f);
@@ -143,6 +177,17 @@ void WLStyleShadow(UILabel *l)
 UIColor *WLBackgroundColor(void)
 {
     NSInteger t = WLCurrentTheme();
+    if (!gBgCache[t] && WLP()->metal) {
+        /* szczotkowane aluminium: płaski kolor i poziome smugi */
+        const WLPalette *p = WLP();
+        UIGraphicsBeginImageContextWithOptions(CGSizeMake(192, 96), YES, 0.0f);
+        [WLRGB(p->bg, 1) setFill];
+        UIRectFill(CGRectMake(0, 0, 192, 96));
+        [WLBrushedOverlay() drawAtPoint:CGPointZero];
+        UIImage *tile = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        gBgCache[t] = [UIColor colorWithPatternImage:tile];
+    }
     if (!gBgCache[t]) {
         const WLPalette *p = WLP();
         UIGraphicsBeginImageContextWithOptions(CGSizeMake(8, 4), YES, 0.0f);
@@ -176,6 +221,24 @@ static void WLFillGradient(CGContextRef c, CGRect r, UIColor *top, UIColor *bott
 static UIImage *WLBarImage(CGFloat height)
 {
     const WLPalette *p = WLP();
+    if (p->metal) {
+        /* szczotkowany metal: jasna góra, "horyzont" w połowie, ciemniejszy dół; kafelek szeroki na 192 pt, żeby smugi łączyły się bez szwu */
+        UIGraphicsBeginImageContextWithOptions(CGSizeMake(192.0f, height), NO, 0.0f);
+        CGContextRef c = UIGraphicsGetCurrentContext();
+        NSArray *cols = [NSArray arrayWithObjects:(__bridge id)WLRGB(p->barT1, 1).CGColor, (__bridge id)WLRGB(p->barT2, 1).CGColor,
+                         (__bridge id)WLRGB(p->barB1, 1).CGColor, (__bridge id)WLRGB(p->barB2, 1).CGColor, nil];
+        static const CGFloat locs[4] = { 0.0f, 0.5f, 0.5001f, 1.0f };
+        WLMetalFill(c, CGRectMake(0, 0, 192, height), cols, locs, 0.9f);
+        [RGBA(255, 255, 255, 1) setFill];
+        CGContextSetAlpha(c, 0.85f);
+        CGContextFillRect(c, CGRectMake(0, 0, 192, 1));
+        CGContextSetAlpha(c, 1.0f);
+        [RGBA(70, 76, 88, 1) setFill];
+        CGContextFillRect(c, CGRectMake(0, height - 1, 192, 1));
+        UIImage *mimg = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        return [mimg resizableImageWithCapInsets:UIEdgeInsetsZero resizingMode:UIImageResizingModeTile];
+    }
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(4.0f, height), NO, 0.0f);
     CGContextRef c = UIGraphicsGetCurrentContext();
     CGFloat half = (CGFloat)((int)(height / 2.0f));
@@ -194,6 +257,17 @@ static UIImage *WLBarImage(CGFloat height)
 
 static UIImage *WLSelectionImage(void)
 {
+    if (WLP()->metal) {
+        /* wgłębienie w metalu: ciemniejsze tło i jasna krawędź na dole */
+        UIGraphicsBeginImageContextWithOptions(CGSizeMake(20.0f, 49.0f), NO, 0.0f);
+        [RGBA(255, 255, 255, 0.7f) setFill];
+        [[UIBezierPath bezierPathWithRoundedRect:CGRectMake(2, 4, 16, 43) cornerRadius:6] fill];
+        [RGBA(60, 66, 78, 0.34f) setFill];
+        [[UIBezierPath bezierPathWithRoundedRect:CGRectMake(2, 3, 16, 43) cornerRadius:6] fill];
+        UIImage *mi = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        return [mi resizableImageWithCapInsets:UIEdgeInsetsMake(12, 9, 12, 9)];
+    }
     UIGraphicsBeginImageContextWithOptions(CGSizeMake(20.0f, 49.0f), NO, 0.0f);
     [RGBA(255, 255, 255, WLP()->light ? 0.24f : 0.16f) setFill];
     [[UIBezierPath bezierPathWithRoundedRect:CGRectMake(2, 3, 16, 43) cornerRadius:6] fill];
@@ -204,13 +278,32 @@ static UIImage *WLSelectionImage(void)
 
 void WLStyleNavigationBar(UINavigationBar *bar)
 {
+    const WLPalette *p = WLP();
     [bar setBackgroundImage:WLBarImage(44.0f) forBarMetrics:UIBarMetricsDefault];
-    bar.tintColor = WLRGB(WLP()->barTint, 1);
-    bar.titleTextAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-        [UIColor whiteColor], UITextAttributeTextColor,
-        [UIColor colorWithWhite:0.0f alpha:0.85f], UITextAttributeTextShadowColor,
-        [NSValue valueWithUIOffset:UIOffsetMake(0, -1)], UITextAttributeTextShadowOffset,
-        [UIFont boldSystemFontOfSize:20.0f], UITextAttributeFont, nil];
+    bar.tintColor = WLRGB(p->barTint, 1);
+    if (p->metal) {
+        /* tłoczony napis: ciemny z białym cieniem pod spodem */
+        bar.titleTextAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
+            RGBA(58, 62, 70, 1), UITextAttributeTextColor,
+            [UIColor colorWithWhite:1.0f alpha:0.9f], UITextAttributeTextShadowColor,
+            [NSValue valueWithUIOffset:UIOffsetMake(0, 1)], UITextAttributeTextShadowOffset,
+            [UIFont boldSystemFontOfSize:20.0f], UITextAttributeFont, nil];
+    } else {
+        bar.titleTextAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
+            [UIColor whiteColor], UITextAttributeTextColor,
+            [UIColor colorWithWhite:0.0f alpha:0.85f], UITextAttributeTextShadowColor,
+            [NSValue valueWithUIOffset:UIOffsetMake(0, -1)], UITextAttributeTextShadowOffset,
+            [UIFont boldSystemFontOfSize:20.0f], UITextAttributeFont, nil];
+    }
+    /* napisy na przyciskach paska (UIAppearance działa na przyciski tworzone po tym wywołaniu) */
+    NSDictionary *btn = p->metal
+        ? [NSDictionary dictionaryWithObjectsAndKeys:RGBA(40, 45, 54, 1), UITextAttributeTextColor,
+              [UIColor colorWithWhite:1.0f alpha:0.85f], UITextAttributeTextShadowColor,
+              [NSValue valueWithUIOffset:UIOffsetMake(0, 1)], UITextAttributeTextShadowOffset, nil]
+        : [NSDictionary dictionaryWithObjectsAndKeys:[UIColor whiteColor], UITextAttributeTextColor,
+              [UIColor colorWithWhite:0.0f alpha:0.45f], UITextAttributeTextShadowColor,
+              [NSValue valueWithUIOffset:UIOffsetMake(0, -1)], UITextAttributeTextShadowOffset, nil];
+    [[UIBarButtonItem appearance] setTitleTextAttributes:btn forState:UIControlStateNormal];
 }
 
 void WLStyleTabBar(UITabBar *bar)
@@ -221,7 +314,7 @@ void WLStyleTabBar(UITabBar *bar)
 
 void WLStyleSearchBar(UISearchBar *bar)
 {
-    bar.barStyle = UIBarStyleBlack;
+    bar.barStyle = WLP()->metal ? UIBarStyleDefault : UIBarStyleBlack;
     bar.tintColor = WLRGB(WLP()->barTint, 1);
 }
 
@@ -288,7 +381,20 @@ static UIImage *WLTabIconTinted(int kind, UIColor *color)
     CGContextFillRect(c, r);
     UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-    return img;
+    if (!WLP()->metal) return img;
+    /* wytłoczone w metalu: białe odbicie o piksel niżej */
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(r.size.width, r.size.height + 1.0f), NO, 0.0f);
+    c = UIGraphicsGetCurrentContext();
+    CGContextSaveGState(c);
+    [mask drawInRect:CGRectMake(0, 1, r.size.width, r.size.height)];
+    CGContextSetBlendMode(c, kCGBlendModeSourceIn);
+    [RGBA(255, 255, 255, 0.85f) setFill];
+    CGContextFillRect(c, CGRectMake(0, 0, r.size.width, r.size.height + 1.0f));
+    CGContextRestoreGState(c);
+    [img drawInRect:CGRectMake(0, 0, r.size.width, r.size.height)];
+    UIImage *out = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return out;
 }
 
 void WLStyleTabItem(UITabBarItem *item, int kind)
@@ -296,8 +402,9 @@ void WLStyleTabItem(UITabBarItem *item, int kind)
     UIColor *off = WLRGB(WLP()->tabOff, 1);
     UIColor *on = WLRGB(WLP()->tabOn, 1);
     [item setFinishedSelectedImage:WLTabIconTinted(kind, on) withFinishedUnselectedImage:WLTabIconTinted(kind, off)];
-    NSValue *offset = [NSValue valueWithUIOffset:UIOffsetMake(0, -1)];
-    UIColor *shadow = [UIColor colorWithWhite:0.0f alpha:0.8f];
+    BOOL metal = WLP()->metal;
+    NSValue *offset = [NSValue valueWithUIOffset:UIOffsetMake(0, metal ? 1 : -1)];
+    UIColor *shadow = metal ? [UIColor colorWithWhite:1.0f alpha:0.85f] : [UIColor colorWithWhite:0.0f alpha:0.8f];
     [item setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:off, UITextAttributeTextColor, shadow, UITextAttributeTextShadowColor, offset, UITextAttributeTextShadowOffset, nil] forState:UIControlStateNormal];
     [item setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:on, UITextAttributeTextColor, shadow, UITextAttributeTextShadowColor, offset, UITextAttributeTextShadowOffset, nil] forState:UIControlStateSelected];
 }
@@ -315,6 +422,7 @@ UIImage *WLGelImage(int style)
 {
     NSInteger th = WLCurrentTheme();
     if (style < 0 || style > 3) style = 1;
+    if (WLP()->metal && style <= 1) return WLChromeImage();          /* w aluminium przyciski są chromowane */
     if (gGelCache[th][style]) return gGelCache[th][style];
     const WLPalette *p = WLP();
     int top[3], bot[3], border[3];
@@ -360,15 +468,31 @@ UIImage *WLThemeSwatch(NSInteger index)
     UIBezierPath *shape = [UIBezierPath bezierPathWithRoundedRect:r cornerRadius:8.0f];
     CGContextSaveGState(c);
     [shape addClip];
-    WLFillGradient(c, CGRectMake(0, 0, s, s), WLRGB(p.accentGelT, 1), WLRGB(p.accentGelB, 1));
-    WLFillGradient(c, CGRectMake(0, 0, s, s * 0.5f), RGBA(255, 255, 255, 0.55f), RGBA(255, 255, 255, 0.10f));
+    if (p.metal) {
+        /* próbka aluminium: srebrny chrom */
+        WLFillGradient(c, CGRectMake(0, 0, s, s * 0.5f), RGBA(250, 251, 252, 1), RGBA(196, 202, 210, 1));
+        WLFillGradient(c, CGRectMake(0, s * 0.5f, s, s * 0.5f), RGBA(150, 157, 168, 1), RGBA(222, 226, 232, 1));
+    } else {
+        WLFillGradient(c, CGRectMake(0, 0, s, s), WLRGB(p.accentGelT, 1), WLRGB(p.accentGelB, 1));
+        WLFillGradient(c, CGRectMake(0, 0, s, s * 0.5f), RGBA(255, 255, 255, 0.55f), RGBA(255, 255, 255, 0.10f));
+    }
     CGContextRestoreGState(c);
-    [WLRGB(p.accentGelBorder, 1) setStroke];
+    [(p.metal ? RGBA(84, 90, 101, 1) : WLRGB(p.accentGelBorder, 1)) setStroke];
     shape.lineWidth = 1.0f;
     [shape stroke];
     UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return img;
+}
+
+UIActivityIndicatorViewStyle WLSpinnerStyle(void)
+{
+    return WLP()->metal ? UIActivityIndicatorViewStyleGray : UIActivityIndicatorViewStyleWhite;
+}
+
+UIColor *WLGlyphColor(void)
+{
+    return WLP()->metal ? WLRGB(WLP()->chromeText, 1) : [UIColor whiteColor];
 }
 
 UIButton *WLGelButton(NSString *title, int style, CGRect frame)
@@ -377,9 +501,15 @@ UIButton *WLGelButton(NSString *title, int style, CGRect frame)
     b.frame = frame;
     [b setBackgroundImage:WLGelImage(style) forState:UIControlStateNormal];
     [b setTitle:title forState:UIControlStateNormal];
-    [b setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
-    [b setTitleShadowColor:[UIColor colorWithWhite:0.0f alpha:0.6f] forState:UIControlStateNormal];
-    b.titleLabel.shadowOffset = CGSizeMake(0, -1);
+    if (WLP()->metal && style <= 1) {
+        [b setTitleColor:WLRGB(WLP()->chromeText, 1) forState:UIControlStateNormal];
+        [b setTitleShadowColor:[UIColor colorWithWhite:1.0f alpha:0.9f] forState:UIControlStateNormal];
+        b.titleLabel.shadowOffset = CGSizeMake(0, 1);
+    } else {
+        [b setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [b setTitleShadowColor:[UIColor colorWithWhite:0.0f alpha:0.6f] forState:UIControlStateNormal];
+        b.titleLabel.shadowOffset = CGSizeMake(0, -1);
+    }
     b.titleLabel.font = [UIFont boldSystemFontOfSize:17.0f];
     b.titleLabel.adjustsFontSizeToFitWidth = YES;
     b.titleLabel.minimumScaleFactor = 0.65f;
