@@ -276,3 +276,10 @@ UIImage *WLSwapImage(void)
     UIGraphicsEndImageContext();
     return img;
 }
+
+void WLOpenURL(NSString *url)
+{
+    Class urlClass = NSClassFromString(@"NSURL");
+    id u = [urlClass URLWithString:url];
+    if (u) [[UIApplication sharedApplication] openURL:u];
+}

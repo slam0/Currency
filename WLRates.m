@@ -169,12 +169,19 @@ NSString *const WLRatesDidChangeNotification = @"WLRatesDidChangeNotification";
     int src = [[item objectAtIndex:0] intValue];
     NSString *scheme = [item objectAtIndex:1];
     NSString *url = [scheme stringByAppendingString:(src == WL_SRC_ERAPI ? kERPath : kNBPPath)];
-    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]
-                                                       cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
-                                                   timeoutInterval:15.0];
+    /* Klasy sieciowe wyszukujemy po nazwie w czasie działania. Zastępcze pliki SDK, z których budujemy aplikację,
+       przypisują je do CFNetwork, a na iOS 6 ich tam nie ma (dyld: "Symbol not found: _OBJC_CLASS_$_NSHTTPURLResponse"
+       i aplikacja zamykała się od razu po starcie). Bez twardego odwołania w pliku problem znika. */
+    Class urlClass = NSClassFromString(@"NSURL");
+    Class requestClass = NSClassFromString(@"NSMutableURLRequest");
+    Class connectionClass = NSClassFromString(@"NSURLConnection");
+    if (!urlClass || !requestClass || !connectionClass) { _step++; [self tryStep]; return; }
+    id req = [requestClass requestWithURL:[urlClass URLWithString:url]
+                              cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
+                          timeoutInterval:15.0];
     [req setValue:@"application/json" forHTTPHeaderField:@"Accept"];
     NSUInteger gen = _generation;
-    [NSURLConnection sendAsynchronousRequest:req queue:[NSOperationQueue mainQueue]
+    [connectionClass sendAsynchronousRequest:req queue:[NSOperationQueue mainQueue]
                            completionHandler:^(NSURLResponse *resp, NSData *data, NSError *err) {
         if (gen != self->_generation || !self->_loading) return;
         [self handleResponse:resp data:data error:err source:src];
@@ -187,12 +194,12 @@ NSString *const WLRatesDidChangeNotification = @"WLRatesDidChangeNotification";
     WLCrumb(err ? @"pobieranie kursów: błąd sieci" : @"pobieranie kursów: odpowiedź");
     if (err) {
         NSInteger code = [err code];
-        if ([[err domain] isEqualToString:NSURLErrorDomain]) {
+        if ([[err domain] isEqualToString:@"NSURLErrorDomain"]) {
             if (code == NSURLErrorNotConnectedToInternet || code == NSURLErrorDataNotAllowed || code == NSURLErrorInternationalRoamingOff) _sawOffline = YES;
             else if (code <= NSURLErrorSecureConnectionFailed && code >= NSURLErrorClientCertificateRequired) _sawSSLError = YES;
         }
     } else {
-        NSInteger status = [resp isKindOfClass:[NSHTTPURLResponse class]] ? [(NSHTTPURLResponse *)resp statusCode] : 200;
+        NSInteger status = [resp respondsToSelector:@selector(statusCode)] ? [(NSHTTPURLResponse *)resp statusCode] : 200;
         if (status == 429) _sawLimit = YES;
         if (status == 200 && [data length] > 0) {
             NSString *text = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];

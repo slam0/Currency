@@ -126,7 +126,7 @@ static NSString *Fold(NSString *s)
 - (void)openSource
 {
     NSString *url = [[WLRates shared] source] == WLSourceNBP ? @"https://nbp.pl" : @"https://www.exchangerate-api.com";
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+    WLOpenURL(url);
 }
 
 /* ---------- lista ---------- */

@@ -207,7 +207,7 @@ static NSString *SourceSettingName(NSInteger s)
     [self.navigationController pushViewController:cc animated:YES];
 }
 
-- (void)openURLString:(NSString *)u { [[UIApplication sharedApplication] openURL:[NSURL URLWithString:u]]; }
+- (void)openURLString:(NSString *)u { WLOpenURL(u); }
 
 - (void)tableView:(UITableView *)t didSelectRowAtIndexPath:(NSIndexPath *)ip
 {

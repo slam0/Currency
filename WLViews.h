@@ -15,6 +15,8 @@ UIView *WLHeaderForTitle(NSString *title, NSString *right);
 UIToolbar *WLKeyboardToolbar(id target, SEL doneAction);
 UIImage *WLCheckImage(BOOL on);
 UIImage *WLFieldImage(void);                    /* wpuszczone pole z tłem pod kwotę */
+/* Otwiera adres w przeglądarce. Klasa NSURL jest wyszukiwana dopiero w czasie działania (patrz uwaga w WLRates.m). */
+void WLOpenURL(NSString *url);
 UIImage *WLStarImage(BOOL on);                 /* ulubione */
 UIImage *WLTriangleImage(void);                 /* strzałka rozwijania na przycisku */
 UIImage *WLSwapImage(void);                     /* zamiana walut */

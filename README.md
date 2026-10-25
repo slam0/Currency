@@ -4,7 +4,7 @@ Przelicznik walut z **aktualnymi kursami z internetu**, napisany w Objective-C p
 Wygląd taki sam jak w aplikacji Gym: grafit z połyskiem, 6 motywów kolorystycznych (domyślnie Zieleń), 3 języki (polski, English, Русский).
 Kursy zapisują się w telefonie, więc przelicznik działa też bez internetu (na ostatnich pobranych kursach).
 
-## Co potrafi (1.0.1)
+## Co potrafi (1.0.2)
 
 * **Przelicznik** – wpisujesz kwotę, wybierasz dwie waluty, wynik liczy się od razu. Przycisk ⇅ zamienia waluty miejscami, dotknięcie wyniku kopiuje go do schowka.
   Pod spodem lista tej samej kwoty we wszystkich **ulubionych** walutach (dotknięcie waluty ustawia ją jako docelową).
@@ -65,6 +65,13 @@ Ikona i ekrany startowe powstają ze skryptu `python3 tools/make_images.py` (Pil
 | `WLConverterController.*`, `WLRatesController.*`, `WLPickerController.*`, `WLSettingsController.*` | ekrany |
 | `WLLang.*` | języki: tabela tłumaczeń `GL(@"polski napis")` (EN/RU) |
 | `WLTheme.*`, `WLViews.*` | wygląd: motywy i paleta, paski, żelowe przyciski, komórki, ikonki, formatowanie liczb |
+
+## Uwaga o budowaniu (ważne przy zmianach w kodzie)
+
+Zastępcze pliki SDK z GitHuba przypisują niektóre klasy do złych bibliotek (np. `NSHTTPURLResponse`, `NSURLConnection`, `NSMutableURLRequest` do CFNetwork),
+a na iOS 6 ich tam nie ma. Odwołanie do takiej klasy w kodzie kończy się błędem dyld „Symbol not found” i zamknięciem aplikacji od razu po starcie.
+Dlatego kod sieciowy (`WLRates.m`, `WLOpenURL` w `WLViews.m`) szuka tych klas po nazwie przez `NSClassFromString`. Nowych klas z innych bibliotek niż UIKit/Foundation
+nie dodawaj bez sprawdzenia.
 
 ## Dodawanie języka, motywu albo waluty
 
