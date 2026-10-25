@@ -5,6 +5,13 @@ Wygląd w stylu iOS 6, na maksa skeuomorficzny: domyślny motyw **Aluminium** (s
 oraz 6 motywów z grafitem i kolorami (Grafit, Błękit, Czerwień, Zieleń, Fiolet, Srebro), 3 języki (polski, English, Русский).
 Kursy zapisują się w telefonie, więc przelicznik działa też bez internetu (na ostatnich pobranych kursach).
 
+## Strona aplikacji
+
+Folder `site/` to strona projektu (`https://slam0.github.io/Waluty/`): szczotkowane aluminium, śrubki, chrom, **jeżdżący pasek z kursami walut w dolarach** na samej górze
+(żywe dane z open.er-api.com; gdy brak sieci, pasek pokazuje wyraźnie oznaczone kursy przykładowe), działający przelicznik z wyświetlaczem LCD, opis, podgląd i instrukcja instalacji.
+Trzy języki (PL/EN/RU), działa też w Safari z iOS 6 (zwykły JavaScript, prefiksy `-webkit-`).
+Publikuje ją workflow **Strona aplikacji** (`.github/workflows/strona.yml`). Jednorazowo: Settings → Pages → Source: **GitHub Actions**.
+
 ## Co nowego w 1.1.4
 
 * **Nowa ikona**: srebrne monety € i $ na szczotkowanym aluminium (źródło: `tools/icon-zrodlo.png`, skrypt `tools/make_images.py` wycina kwadrat i skaluje do wszystkich rozmiarów).

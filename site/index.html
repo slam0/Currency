@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#9aa1ad">
+<title>Currency – przelicznik walut dla iOS 6</title>
+<meta name="description" content="Currency: przelicznik walut z aktualnymi kursami, na maksa skeuomorficzny, dla iOS 6.">
+<link rel="icon" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+*{-webkit-box-sizing:border-box;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:#aab1bc}
+body{margin:0;padding:62px 0 0;font:16px/1.45 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#39414d;
+ background:url(metal.png) repeat,-webkit-linear-gradient(top,#e4e7eb 0,#c3c8d0 40%,#98a0ab 100%);
+ background:url(metal.png) repeat,linear-gradient(to bottom,#e4e7eb 0,#c3c8d0 40%,#98a0ab 100%);min-height:100%}
+a{color:#1b62c8}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 34px}
+
+/* ---------- śrubki ---------- */
+.scr{position:absolute;width:14px;height:14px;border-radius:50%;
+ background:-webkit-radial-gradient(35% 30%,#fff 0,#d6dae1 40%,#8d94a0 100%);background:radial-gradient(circle at 35% 30%,#fff 0,#d6dae1 40%,#8d94a0 100%);
+ -webkit-box-shadow:0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.35);box-shadow:0 1px 0 rgba(255,255,255,.9),0 1px 2px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.35)}
+.scr:after{content:"";position:absolute;left:2px;right:2px;top:6px;height:2px;border-radius:1px;background:#4a505b;-webkit-box-shadow:0 1px 0 rgba(255,255,255,.7);box-shadow:0 1px 0 rgba(255,255,255,.7)}
+.scr.r1:after{-webkit-transform:rotate(-32deg);transform:rotate(-32deg)}
+.scr.r2:after{-webkit-transform:rotate(41deg);transform:rotate(41deg)}
+.scr.r3:after{-webkit-transform:rotate(-78deg);transform:rotate(-78deg)}
+.scr.r4:after{-webkit-transform:rotate(12deg);transform:rotate(12deg)}
+
+/* ---------- jeżdżący pasek z kursami ---------- */
+#tk{position:fixed;left:0;right:0;top:0;height:50px;z-index:20;
+ background:-webkit-linear-gradient(top,#fbfcfd 0,#d7dbe1 46%,#a2a9b5 54%,#cdd1d8 100%);background:linear-gradient(to bottom,#fbfcfd 0,#d7dbe1 46%,#a2a9b5 54%,#cdd1d8 100%);
+ border-bottom:1px solid #4d5460;-webkit-box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 1px 0 #fff;box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 1px 0 #fff}
+#tk .scr{top:18px}
+#tk .scr.l{left:11px}#tk .scr.rt{right:11px}
+#tkg{position:absolute;left:34px;right:34px;top:6px;bottom:6px;overflow:hidden;border-radius:7px;border:1px solid #2a313b;
+ background:-webkit-linear-gradient(top,#04100a 0,#0b2412 55%,#0f2f18 100%);background:linear-gradient(to bottom,#04100a 0,#0b2412 55%,#0f2f18 100%);
+ -webkit-box-shadow:inset 0 3px 7px #000,0 1px 0 rgba(255,255,255,.85);box-shadow:inset 0 3px 7px #000,0 1px 0 rgba(255,255,255,.85)}
+#tkg:after{content:"";position:absolute;left:0;right:0;top:0;height:50%;pointer-events:none;border-radius:6px 6px 40% 40%/6px 6px 8px 8px;
+ background:-webkit-linear-gradient(top,rgba(255,255,255,.2),rgba(255,255,255,.04));background:linear-gradient(to bottom,rgba(255,255,255,.2),rgba(255,255,255,.04))}
+#tkl{position:absolute;left:0;top:0;bottom:0;z-index:3;padding:0 12px 0 10px;font:bold 13px/36px Menlo,Monaco,"Courier New",monospace;color:#c9ffb8;letter-spacing:.5px;
+ background:-webkit-linear-gradient(left,#04100a 80%,rgba(4,16,10,0));background:linear-gradient(to right,#04100a 80%,rgba(4,16,10,0));text-shadow:0 0 6px rgba(120,255,90,.8);white-space:nowrap}
+#tkr{position:absolute;right:0;top:0;bottom:0;width:26px;z-index:3;background:-webkit-linear-gradient(right,#06150b,rgba(6,21,11,0));background:linear-gradient(to left,#06150b,rgba(6,21,11,0))}
+#trk{position:absolute;left:0;top:0;height:100%;white-space:nowrap;font:bold 14px/36px Menlo,Monaco,"Courier New",monospace;color:#8bff6a;text-shadow:0 0 6px rgba(120,255,90,.7);
+ -webkit-animation:tk 90s linear infinite;animation:tk 90s linear infinite;padding-left:96px}
+#trk:hover{-webkit-animation-play-state:paused;animation-play-state:paused}
+#trk .it{display:inline-block;margin-right:26px}
+#trk .it b{color:#d8ffcc}
+#trk .it u{text-decoration:none;color:#69d94d}
+#trk .up{color:#74ff59}#trk .dn{color:#ff6a5a;text-shadow:0 0 6px rgba(255,90,70,.7)}
+@-webkit-keyframes tk{from{-webkit-transform:translate3d(0,0,0)}to{-webkit-transform:translate3d(-50%,0,0)}}
+@keyframes tk{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+@media (prefers-reduced-motion:reduce){#trk{-webkit-animation:none;animation:none}#tkg{overflow-x:auto}}
+.led{position:absolute;left:12px;top:19px;width:12px;height:12px;border-radius:50%;background:-webkit-radial-gradient(35% 30%,#d8ffc8,#27c014 55%,#0b6a05);background:radial-gradient(circle at 35% 30%,#d8ffc8,#27c014 55%,#0b6a05);-webkit-box-shadow:0 0 8px #3cff22,inset 0 0 0 1px rgba(0,0,0,.5);box-shadow:0 0 8px #3cff22,inset 0 0 0 1px rgba(0,0,0,.5)}
+.led.off{background:-webkit-radial-gradient(35% 30%,#ffd1c8,#d2301a 55%,#6a0f05);background:radial-gradient(circle at 35% 30%,#ffd1c8,#d2301a 55%,#6a0f05);-webkit-box-shadow:0 0 8px #ff4a30,inset 0 0 0 1px rgba(0,0,0,.5);box-shadow:0 0 8px #ff4a30,inset 0 0 0 1px rgba(0,0,0,.5)}
+#tk .scr.l{display:none}
+
+/* ---------- płyty ---------- */
+.plate{position:relative;margin:20px 0;padding:24px 22px;border-radius:15px;border:1px solid #7a818d;
+ background:url(metal.png) repeat,-webkit-linear-gradient(top,#f6f8fa 0,#dadee4 42%,#bec3cb 100%);background:url(metal.png) repeat,linear-gradient(to bottom,#f6f8fa 0,#dadee4 42%,#bec3cb 100%);
+ -webkit-box-shadow:inset 0 1px 0 #fff,inset 0 -2px 3px rgba(0,0,0,.18),0 7px 16px rgba(0,0,0,.38);box-shadow:inset 0 1px 0 #fff,inset 0 -2px 3px rgba(0,0,0,.18),0 7px 16px rgba(0,0,0,.38)}
+.plate>.scr.tl{left:9px;top:9px}.plate>.scr.tr{right:9px;top:9px}.plate>.scr.bl{left:9px;bottom:9px}.plate>.scr.br{right:9px;bottom:9px}
+.sh{position:relative;margin:30px 0 0;padding:9px 34px;border-radius:8px;border:1px solid #20242b;text-align:center;font:bold 13px/1.2 "Helvetica Neue",Helvetica,Arial,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#f0f3f7;text-shadow:0 -1px 0 #000;
+ background:url(metal.png) repeat,-webkit-linear-gradient(top,#7a8290 0,#4b515c 50%,#3a3f49 100%);background:url(metal.png) repeat,linear-gradient(to bottom,#7a8290 0,#4b515c 50%,#3a3f49 100%);
+ -webkit-box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 4px rgba(0,0,0,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 4px rgba(0,0,0,.4)}
+.sh .scr{top:50%;margin-top:-7px}.sh .scr.l{left:10px}.sh .scr.rt{right:10px}
+.eng{color:#5a6270;text-shadow:0 1px 0 rgba(255,255,255,.95),0 -1px 0 rgba(0,0,0,.25)}
+
+/* ---------- hero ---------- */
+.hero{text-align:center;padding-top:30px;padding-bottom:30px}
+.ico{position:relative;display:inline-block;width:132px;height:132px;border-radius:29px;overflow:hidden;line-height:0;
+ -webkit-box-shadow:0 8px 16px rgba(0,0,0,.5),0 0 0 1px rgba(0,0,0,.5);box-shadow:0 8px 16px rgba(0,0,0,.5),0 0 0 1px rgba(0,0,0,.5)}
+.ico img{width:132px;height:132px}
+.ico:after{content:"";position:absolute;left:0;right:0;top:0;height:50%;border-radius:29px 29px 50% 50%/29px 29px 22px 22px;
+ background:-webkit-linear-gradient(top,rgba(255,255,255,.62),rgba(255,255,255,.12));background:linear-gradient(to bottom,rgba(255,255,255,.62),rgba(255,255,255,.12))}
+h1{margin:18px 0 2px;font:bold 46px/1.1 "Helvetica Neue",Helvetica,Arial,sans-serif;letter-spacing:.5px}
+.tag{margin:0;font-size:19px;font-weight:bold}
+.sub{margin:12px auto 0;max-width:560px;font-size:16px}
+.btns{margin:22px 0 4px}
+.btn{display:inline-block;margin:6px 5px;padding:13px 24px;border-radius:11px;border:1px solid #0e6208;text-decoration:none;font:bold 16px/1.2 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.55);cursor:pointer;
+ background-color:#22a313;
+ background-image:-webkit-linear-gradient(top,rgba(255,255,255,.62) 0,rgba(255,255,255,.18) 50%,rgba(0,0,0,.08) 51%,rgba(255,255,255,.0) 100%),-webkit-linear-gradient(top,#6fe84a,#1c8f0f);
+ background-image:linear-gradient(to bottom,rgba(255,255,255,.62) 0,rgba(255,255,255,.18) 50%,rgba(0,0,0,.08) 51%,rgba(255,255,255,0) 100%),linear-gradient(to bottom,#6fe84a,#1c8f0f);
+ -webkit-box-shadow:0 1px 0 #fff,0 4px 7px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.7);box-shadow:0 1px 0 #fff,0 4px 7px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.7)}
+.btn:active{-webkit-box-shadow:0 1px 0 #fff,inset 0 3px 6px rgba(0,0,0,.5);box-shadow:0 1px 0 #fff,inset 0 3px 6px rgba(0,0,0,.5);background-color:#18800d}
+.btn.ch{border-color:#5b616c;color:#2d343e;text-shadow:0 1px 0 rgba(255,255,255,.9);background-color:#c9ced6;
+ background-image:-webkit-linear-gradient(top,rgba(255,255,255,.85) 0,rgba(255,255,255,.3) 50%,rgba(0,0,0,.06) 51%,rgba(255,255,255,0) 100%),-webkit-linear-gradient(top,#eef0f3,#aab0ba);
+ background-image:linear-gradient(to bottom,rgba(255,255,255,.85) 0,rgba(255,255,255,.3) 50%,rgba(0,0,0,.06) 51%,rgba(255,255,255,0) 100%),linear-gradient(to bottom,#eef0f3,#aab0ba)}
+.req{margin:14px auto 0;max-width:600px;font-size:13px}
+#lg{position:absolute;right:20px;top:18px;margin:0;padding:0;list-style:none;border:1px solid #5b616c;border-radius:8px;overflow:hidden;
+ -webkit-box-shadow:0 1px 0 #fff,0 2px 4px rgba(0,0,0,.3);box-shadow:0 1px 0 #fff,0 2px 4px rgba(0,0,0,.3)}
+#lg li{float:left;margin:0}
+#lg button{display:block;width:44px;padding:7px 0;border:0;border-left:1px solid #7d8490;font:bold 12px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#2d343e;text-shadow:0 1px 0 #fff;cursor:pointer;
+ background:-webkit-linear-gradient(top,#f6f7f9,#b9bec7);background:linear-gradient(to bottom,#f6f7f9,#b9bec7)}
+#lg li:first-child button{border-left:0}
+#lg button.on{color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.6);background:-webkit-linear-gradient(top,#4a525e,#6b7380);background:linear-gradient(to bottom,#4a525e,#6b7380);-webkit-box-shadow:inset 0 2px 5px rgba(0,0,0,.6);box-shadow:inset 0 2px 5px rgba(0,0,0,.6)}
+
+/* ---------- przelicznik ---------- */
+.dev{max-width:470px;margin:20px auto}
+.lab{margin:0 0 5px 4px;font:bold 11px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;letter-spacing:2px}
+.lcdf{margin:0 0 14px;padding:8px;border-radius:12px;border:1px solid #2b3039;
+ background:-webkit-linear-gradient(top,#9aa1ad,#5a606b);background:linear-gradient(to bottom,#9aa1ad,#5a606b);
+ -webkit-box-shadow:0 1px 0 #fff,inset 0 1px 0 rgba(255,255,255,.5);box-shadow:0 1px 0 #fff,inset 0 1px 0 rgba(255,255,255,.5)}
+.lcd{position:relative;overflow:hidden;padding:13px 14px 10px;border-radius:7px;text-align:right;white-space:nowrap;font-size:0;min-height:76px;
+ background:-webkit-linear-gradient(top,#cde1a4 0,#b4cd86 55%,#a6c179 100%);background:linear-gradient(to bottom,#cde1a4 0,#b4cd86 55%,#a6c179 100%);
+ -webkit-box-shadow:inset 0 4px 9px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.45);box-shadow:inset 0 4px 9px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.45)}
+.lcd:after{content:"";position:absolute;left:0;right:0;top:0;height:45%;pointer-events:none;background:-webkit-linear-gradient(top,rgba(255,255,255,.34),rgba(255,255,255,.04));background:linear-gradient(to bottom,rgba(255,255,255,.34),rgba(255,255,255,.04))}
+.lcd .sg{display:inline-block;-webkit-transform:skewX(-6deg);transform:skewX(-6deg);vertical-align:bottom}
+.lcd svg{display:inline-block;vertical-align:bottom}
+.lcd svg.d{width:26px;height:46px;margin-left:5px}
+.lcd svg.p{width:9px;height:46px;margin-left:2px}
+.lcd .unit{position:absolute;left:12px;top:9px;font:bold 12px/1 Menlo,Monaco,"Courier New",monospace;color:#2a3818;letter-spacing:1px}
+.lcd.res svg.d{width:22px;height:40px}.lcd.res svg.p{height:40px}
+.sels{margin:0 0 14px;overflow:hidden}
+.sels .c{float:left;width:50%;padding:0 5px}
+.sels .c:first-child{padding-left:0}.sels .c:last-child{padding-right:0}
+.sel{position:relative;border-radius:10px;border:1px solid #565d69;
+ background:-webkit-linear-gradient(top,#fbfcfd 0,#dfe3e8 48%,#b3b9c3 52%,#d3d7de 100%);background:linear-gradient(to bottom,#fbfcfd 0,#dfe3e8 48%,#b3b9c3 52%,#d3d7de 100%);
+ -webkit-box-shadow:0 1px 0 #fff,0 3px 5px rgba(0,0,0,.3);box-shadow:0 1px 0 #fff,0 3px 5px rgba(0,0,0,.3)}
+.sel:after{content:"";position:absolute;right:13px;top:50%;margin-top:-3px;border:6px solid transparent;border-top-color:#39414d;border-bottom:0;pointer-events:none}
+.sel select{display:block;width:100%;margin:0;padding:11px 32px 11px 13px;border:0;border-radius:10px;background:transparent;-webkit-appearance:none;-moz-appearance:none;appearance:none;font:bold 16px/1.2 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#2c323b;text-shadow:0 1px 0 #fff}
+.keys{margin:0 -4px;overflow:hidden}
+.keys .k{float:left;width:25%;padding:0 4px 8px}
+.keys .k.w2{width:50%}
+.keys button{display:block;width:100%;padding:13px 0 12px;border-radius:10px;border:1px solid #4f5662;font:bold 20px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;color:#2c323b;text-shadow:0 1px 0 #fff;cursor:pointer;
+ background-color:#c9ced6;
+ background-image:-webkit-linear-gradient(top,rgba(255,255,255,.8) 0,rgba(255,255,255,.25) 50%,rgba(0,0,0,.07) 51%,rgba(255,255,255,0) 100%),-webkit-linear-gradient(top,#f1f3f6,#a9afb9);
+ background-image:linear-gradient(to bottom,rgba(255,255,255,.8) 0,rgba(255,255,255,.25) 50%,rgba(0,0,0,.07) 51%,rgba(255,255,255,0) 100%),linear-gradient(to bottom,#f1f3f6,#a9afb9);
+ -webkit-box-shadow:0 1px 0 #fff,0 3px 5px rgba(0,0,0,.35),inset 0 1px 0 #fff;box-shadow:0 1px 0 #fff,0 3px 5px rgba(0,0,0,.35),inset 0 1px 0 #fff}
+.keys button:active{-webkit-box-shadow:0 1px 0 #fff,inset 0 3px 6px rgba(0,0,0,.45);box-shadow:0 1px 0 #fff,inset 0 3px 6px rgba(0,0,0,.45);background-color:#a4aab4}
+.keys button.op{color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.55);border-color:#2f353f;
+ background-image:-webkit-linear-gradient(top,rgba(255,255,255,.45) 0,rgba(255,255,255,.12) 50%,rgba(0,0,0,.12) 51%,rgba(255,255,255,0) 100%),-webkit-linear-gradient(top,#707987,#363c46);
+ background-image:linear-gradient(to bottom,rgba(255,255,255,.45) 0,rgba(255,255,255,.12) 50%,rgba(0,0,0,.12) 51%,rgba(255,255,255,0) 100%),linear-gradient(to bottom,#707987,#363c46)}
+.keys button.cl{color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.55);border-color:#6d0715;
+ background-image:-webkit-linear-gradient(top,rgba(255,255,255,.5) 0,rgba(255,255,255,.14) 50%,rgba(0,0,0,.1) 51%,rgba(255,255,255,0) 100%),-webkit-linear-gradient(top,#ee5b6a,#a80f26);
+ background-image:linear-gradient(to bottom,rgba(255,255,255,.5) 0,rgba(255,255,255,.14) 50%,rgba(0,0,0,.1) 51%,rgba(255,255,255,0) 100%),linear-gradient(to bottom,#ee5b6a,#a80f26)}
+.note{margin:6px 0 0;text-align:center;font-size:12px}
+
+/* ---------- funkcje ---------- */
+.fts{margin:16px -8px 0;overflow:hidden}
+.ft{float:left;width:50%;padding:0 8px 16px}
+.fc{position:relative;height:100%;min-height:128px;padding:16px 16px 16px 82px;border-radius:12px;border:1px solid #7b828e;
+ background:-webkit-linear-gradient(top,#eceff2,#cfd4db);background:linear-gradient(to bottom,#eceff2,#cfd4db);
+ -webkit-box-shadow:inset 0 1px 0 #fff,inset 0 -1px 2px rgba(0,0,0,.2),0 4px 9px rgba(0,0,0,.3);box-shadow:inset 0 1px 0 #fff,inset 0 -1px 2px rgba(0,0,0,.2),0 4px 9px rgba(0,0,0,.3)}
+.fc .bd{position:absolute;left:16px;top:16px;width:52px;height:52px;border-radius:50%;text-align:center;font:bold 25px/52px "Helvetica Neue",Helvetica,Arial,sans-serif;color:#4c5461;text-shadow:0 1px 0 #fff,0 -1px 0 rgba(0,0,0,.3);
+ background:-webkit-radial-gradient(35% 25%,#fff 0,#e1e5ea 35%,#9ea5b1 100%);background:radial-gradient(circle at 35% 25%,#fff 0,#e1e5ea 35%,#9ea5b1 100%);
+ -webkit-box-shadow:0 2px 4px rgba(0,0,0,.45),inset 0 0 0 4px rgba(120,128,140,.35),inset 0 0 0 5px rgba(255,255,255,.8);box-shadow:0 2px 4px rgba(0,0,0,.45),inset 0 0 0 4px rgba(120,128,140,.35),inset 0 0 0 5px rgba(255,255,255,.8)}
+.fc h3{margin:0 0 4px;font-size:16px;line-height:1.25}
+.fc p{margin:0;font-size:14px;line-height:1.4}
+
+/* ---------- telefon ---------- */
+.phone{position:relative;width:250px;margin:6px auto 0;padding:46px 12px 74px;border-radius:40px;border:1px solid #14161a;
+ background:-webkit-linear-gradient(left,#3a3f48,#14161a 12%,#2a2e36 50%,#14161a 88%,#3a3f48);background:linear-gradient(to right,#3a3f48,#14161a 12%,#2a2e36 50%,#14161a 88%,#3a3f48);
+ -webkit-box-shadow:0 12px 22px rgba(0,0,0,.55),inset 0 0 0 2px #5b616c,inset 0 0 0 3px #0c0d10;box-shadow:0 12px 22px rgba(0,0,0,.55),inset 0 0 0 2px #5b616c,inset 0 0 0 3px #0c0d10}
+.phone img{display:block;width:100%;border:1px solid #000;border-radius:3px}
+.phone:before{content:"";position:absolute;left:50%;top:20px;width:56px;height:7px;margin-left:-28px;border-radius:4px;background:#050506;-webkit-box-shadow:inset 0 1px 2px #000,0 1px 0 rgba(255,255,255,.18);box-shadow:inset 0 1px 2px #000,0 1px 0 rgba(255,255,255,.18)}
+.phone:after{content:"";position:absolute;left:50%;bottom:17px;width:42px;height:42px;margin-left:-21px;border-radius:50%;border:1px solid #000;
+ background:-webkit-radial-gradient(50% 30%,#2a2d33,#0b0c0e);background:radial-gradient(circle at 50% 30%,#2a2d33,#0b0c0e);-webkit-box-shadow:0 1px 0 rgba(255,255,255,.2),inset 0 0 0 3px #17181b;box-shadow:0 1px 0 rgba(255,255,255,.2),inset 0 0 0 3px #17181b}
+.cap{margin:16px 0 0;text-align:center;font-size:13px}
+
+/* ---------- instalacja ---------- */
+ol.st{margin:0;padding:0;list-style:none;counter-reset:s}
+ol.st li{position:relative;margin:0 0 14px;padding:3px 0 0 48px;min-height:34px;counter-increment:s}
+ol.st li:before{content:counter(s);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;text-align:center;font:bold 18px/34px "Helvetica Neue",Helvetica,Arial,sans-serif;color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.6);
+ background:-webkit-linear-gradient(top,#6b7482,#363c46);background:linear-gradient(to bottom,#6b7482,#363c46);-webkit-box-shadow:0 2px 3px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5);box-shadow:0 2px 3px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5)}
+ol.st li:last-child{margin-bottom:0}
+code{padding:1px 5px;border-radius:4px;background:rgba(0,0,0,.1);font:13px Menlo,Monaco,"Courier New",monospace;word-break:break-all}
+footer{margin:26px 0 0;text-align:center;font-size:13px}
+footer .sig{font:bold 14px/1.3 "Helvetica Neue",Helvetica,Arial,sans-serif;letter-spacing:2px}
+noscript p{margin:10px 0;padding:10px;border-radius:8px;background:#fff;color:#a60f25;text-align:center}
+
+@media (max-width:639px){
+ .ft{width:100%}
+ .plate{padding:22px 16px}
+ h1{font-size:40px}
+ #lg{position:static;display:table;margin:0 auto 16px}
+ .hero{padding-top:20px}
+}
+@media (max-width:479px){
+ .lcd svg.d{width:22px;height:40px;margin-left:4px}
+ .lcd svg.p{width:8px;height:40px}
+ .lcd.res svg.d{width:19px;height:35px;margin-left:4px}.lcd.res svg.p{height:35px}
+ .lcd{padding:12px 10px 9px}
+ #tkl{display:none}
+ #trk{padding-left:0}
+}
+@media (max-width:359px){
+ .lcd svg.d{width:18px;height:33px;margin-left:3px}.lcd svg.p{width:7px;height:33px}
+ .lcd.res svg.d{width:16px;height:30px}.lcd.res svg.p{height:30px}
+ .plate{padding:20px 12px}
+}
+</style></head>
+<body>
+
+<div id="tk" role="marquee" aria-label="Kursy walut w dolarach">
+ <span class="led off" id="led"></span><span class="scr rt r2"></span>
+ <div id="tkg">
+  <div id="tkl" data-t="tk_label">1 = $</div>
+  <div id="trk"><span class="it"><b>…</b></span></div>
+  <div id="tkr"></div>
+ </div>
+</div>
+
+<div class="wrap">
+
+<div class="plate hero">
+ <ul id="lg"><li><button data-l="pl" class="on">PL</button></li><li><button data-l="en">EN</button></li><li><button data-l="ru">RU</button></li></ul>
+ <div class="ico"><img src="icon.png" width="132" height="132" alt="Currency"></div>
+ <h1 class="eng">Currency</h1>
+ <p class="tag eng" data-t="tag">Przelicznik walut dla iOS 6</p>
+ <p class="sub" data-t="sub">Aktualne kursy z internetu, motyw Aluminium na maksa skeuomorficzny i działanie także bez sieci.</p>
+ <div class="btns">
+  <a class="btn" id="b-ipa" href="https://github.com/slam0/Waluty/releases/download/najnowsza/Currency.ipa" data-t="b_ipa">Pobierz .ipa</a>
+  <a class="btn ch" href="https://slam0.github.io/cydia/" data-t="b_cy">Źródło Cydii</a>
+  <a class="btn ch" href="https://github.com/slam0/Waluty" data-t="b_gh">Kod na GitHubie</a>
+ </div>
+ <p class="req" data-t="req">iOS 6.0 lub nowszy · iPhone 3GS/4/4S/5 i iPod touch 4/5 (armv7) · wymaga jailbreaka</p>
+</div>
+
+<div class="sh" id="h-try"><span class="scr l r3"></span><span data-t="h_try">Wypróbuj przelicznik</span><span class="scr rt r1"></span></div>
+<div class="plate dev" id="dev">
+ <div class="lab eng" data-t="l_amt">KWOTA</div>
+ <div class="lcdf"><div class="lcd" id="lcdA"><span class="unit" id="uA"></span><span class="sg" id="dA"></span></div></div>
+ <div class="lab eng" data-t="l_res">WYNIK</div>
+ <div class="lcdf"><div class="lcd res" id="lcdR"><span class="unit" id="uR"></span><span class="sg" id="dR"></span></div></div>
+ <div class="sels">
+  <div class="c"><div class="sel"><select id="sf" aria-label="Z"></select></div></div>
+  <div class="c"><div class="sel"><select id="st" aria-label="Na"></select></div></div>
+ </div>
+ <div class="keys" id="keys">
+  <div class="k"><button data-k="7">7</button></div><div class="k"><button data-k="8">8</button></div><div class="k"><button data-k="9">9</button></div><div class="k"><button data-k="C" class="cl">C</button></div>
+  <div class="k"><button data-k="4">4</button></div><div class="k"><button data-k="5">5</button></div><div class="k"><button data-k="6">6</button></div><div class="k"><button data-k="B" class="op" aria-label="Backspace">&#9003;</button></div>
+  <div class="k"><button data-k="1">1</button></div><div class="k"><button data-k="2">2</button></div><div class="k"><button data-k="3">3</button></div><div class="k"><button data-k="S" class="op" aria-label="Swap">&#8596;</button></div>
+  <div class="k"><button data-k="0">0</button></div><div class="k"><button data-k="00">00</button></div><div class="k w2"><button data-k=".">,</button></div>
+ </div>
+ <p class="note eng" id="src"></p>
+</div>
+
+<div class="sh"><span class="scr l r2"></span><span data-t="h_ft">Co potrafi</span><span class="scr rt r4"></span></div>
+<div class="fts">
+ <div class="ft"><div class="fc"><span class="bd">$</span><h3 class="eng" data-t="f1t">Aktualne kursy</h3><p data-t="f1p">Kursy z open.er-api.com lub z NBP, odświeżane co godzinę po wejściu do aplikacji.</p></div></div>
+ <div class="ft"><div class="fc"><span class="bd">&euro;</span><h3 class="eng" data-t="f2t">Działa bez sieci</h3><p data-t="f2p">Ostatnie pobrane kursy zapisują się w telefonie, więc przelicznik liczy też w metrze.</p></div></div>
+ <div class="ft"><div class="fc"><span class="bd">&pound;</span><h3 class="eng" data-t="f3t">Aluminium i 6 motywów</h3><p data-t="f3p">Szczotkowany metal, chrom, śrubki i wyświetlacze LCD z cyframi siedmiosegmentowymi.</p></div></div>
+ <div class="ft"><div class="fc"><span class="bd">&yen;</span><h3 class="eng" data-t="f4t">Trzy języki</h3><p data-t="f4p">Polski, English i Русский, a nazwy około 150 walut w każdym z nich.</p></div></div>
+ <div class="ft"><div class="fc"><span class="bd">&#9733;</span><h3 class="eng" data-t="f5t">Ulubione i wyszukiwarka</h3><p data-t="f5p">Gwiazdka dodaje walutę do ulubionych, a wyszukiwarka znajdzie ją po kodzie i po nazwie.</p></div></div>
+ <div class="ft"><div class="fc"><span class="bd">z&#322;</span><h3 class="eng" data-t="f6t">Dla starych iPhone'ów</h3><p data-t="f6p">Napisana od zera pod iOS 6, lekka i szybka, bez reklam i bez śledzenia.</p></div></div>
+</div>
+
+<div class="sh"><span class="scr l r1"></span><span data-t="h_pv">Podgląd</span><span class="scr rt r3"></span></div>
+<div class="plate">
+ <div class="phone"><img src="podglad.png" alt="Currency, motyw Aluminium"></div>
+ <p class="cap eng" data-t="cap">Wizualizacja motywu Aluminium (makieta, nie zrzut z telefonu).</p>
+</div>
+
+<div class="sh"><span class="scr l r4"></span><span data-t="h_in">Instalacja</span><span class="scr rt r2"></span></div>
+<div class="plate">
+ <ol class="st">
+  <li data-h="s1">W Cydii: <b>Manage → Sources → Edit → Add</b> i wpisz <code>https://slam0.github.io/cydia/</code>.</li>
+  <li data-h="s2">Wyszukaj <b>Currency</b> i dotknij <b>Install</b>. Kolejne wersje zaktualizują się same.</li>
+  <li data-h="s3">Albo pobierz plik <b>.ipa</b> i zainstaluj go przez iTunes (potrzebny AppSync Unified).</li>
+ </ol>
+</div>
+
+<noscript><p>Ta strona używa JavaScriptu do kursów i przelicznika.</p></noscript>
+
+<footer class="eng">
+ <div class="sig">nazarOvsky 2024-2026</div>
+ <p data-t="disc">Kursy są orientacyjne i nie służą do rozliczeń. Kantory i banki stosują własne kursy.</p>
+ <p><a href="https://www.exchangerate-api.com" data-t="attr">Rates By Exchange Rate API</a></p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+var URL_ER="https://open.er-api.com/v6/latest/USD";
+var TICK=["EUR","GBP","CHF","PLN","JPY","CNY","CZK","SEK","NOK","DKK","UAH","CAD","AUD","NZD","TRY","HUF","RON","BGN","INR","BRL","MXN","ZAR","KRW","SGD","HKD","AED","ILS","THB"];
+var LIST=["USD","EUR","PLN","GBP","CHF","CZK","UAH","RUB","SEK","NOK","DKK","HUF","RON","BGN","TRY","JPY","CNY","KRW","INR","CAD","AUD","NZD","BRL","MXN","ZAR","SGD","HKD","AED","ILS","THB"];
+/* kursy przykładowe (ile sztuk za 1 USD) - używane TYLKO, gdy nie uda się pobrać prawdziwych */
+var FALL={USD:1,EUR:.92,PLN:3.95,GBP:.78,CHF:.88,CZK:23,UAH:41,RUB:90,SEK:10.6,NOK:10.8,DKK:6.9,HUF:360,RON:4.6,BGN:1.8,TRY:34,JPY:150,CNY:7.2,KRW:1350,INR:84,CAD:1.38,AUD:1.52,NZD:1.65,BRL:5.5,MXN:19.5,ZAR:18,SGD:1.33,HKD:7.8,AED:3.67,ILS:3.7,THB:34};
+
+var T={
+pl:{tk_label:"1 = $",tag:"Przelicznik walut dla iOS 6",sub:"Aktualne kursy z internetu, motyw Aluminium na maksa skeuomorficzny i działanie także bez sieci.",b_ipa:"Pobierz .ipa",b_cy:"Źródło Cydii",b_gh:"Kod na GitHubie",req:"iOS 6.0 lub nowszy · iPhone 3GS/4/4S/5 i iPod touch 4/5 (armv7) · wymaga jailbreaka",h_try:"Wypróbuj przelicznik",l_amt:"KWOTA",l_res:"WYNIK",h_ft:"Co potrafi",
+f1t:"Aktualne kursy",f1p:"Kursy z open.er-api.com lub z NBP, odświeżane co godzinę po wejściu do aplikacji.",f2t:"Działa bez sieci",f2p:"Ostatnie pobrane kursy zapisują się w telefonie, więc przelicznik liczy też w metrze.",f3t:"Aluminium i 6 motywów",f3p:"Szczotkowany metal, chrom, śrubki i wyświetlacze LCD z cyframi siedmiosegmentowymi.",f4t:"Trzy języki",f4p:"Polski, English i Русский, a nazwy około 150 walut w każdym z nich.",f5t:"Ulubione i wyszukiwarka",f5p:"Gwiazdka dodaje walutę do ulubionych, a wyszukiwarka znajdzie ją po kodzie i po nazwie.",f6t:"Dla starych iPhone'ów",f6p:"Napisana od zera pod iOS 6, lekka i szybka, bez reklam i bez śledzenia.",
+h_pv:"Podgląd",cap:"Wizualizacja motywu Aluminium (makieta, nie zrzut z telefonu).",h_in:"Instalacja",
+s1:"W Cydii: <b>Manage → Sources → Edit → Add</b> i wpisz <code>https://slam0.github.io/cydia/</code>.",s2:"Wyszukaj <b>Currency</b> i dotknij <b>Install</b>. Kolejne wersje zaktualizują się same.",s3:"Albo pobierz plik <b>.ipa</b> i zainstaluj go przez iTunes (potrzebny AppSync Unified).",
+disc:"Kursy są orientacyjne i nie służą do rozliczeń. Kantory i banki stosują własne kursy.",attr:"Rates By Exchange Rate API",
+title:"Currency – przelicznik walut dla iOS 6",src_ok:"Kursy: open.er-api.com, stan na ",src_off:"Brak połączenia: kursy przykładowe, tylko do zabawy.",loading:"Wczytywanie kursów…",off:"BRAK SIECI · kursy przykładowe"},
+en:{tk_label:"1 = $",tag:"Currency converter for iOS 6",sub:"Live exchange rates, a maximally skeuomorphic Aluminium theme, and it works offline too.",b_ipa:"Download .ipa",b_cy:"Cydia source",b_gh:"Code on GitHub",req:"iOS 6.0 or newer · iPhone 3GS/4/4S/5 and iPod touch 4/5 (armv7) · jailbreak required",h_try:"Try the converter",l_amt:"AMOUNT",l_res:"RESULT",h_ft:"Features",
+f1t:"Live rates",f1p:"Rates from open.er-api.com or the NBP, refreshed hourly when you open the app.",f2t:"Works offline",f2p:"The last downloaded rates are saved on the phone, so it still converts in the subway.",f3t:"Aluminium and 6 themes",f3p:"Brushed metal, chrome, screws and LCD displays with seven-segment digits.",f4t:"Three languages",f4p:"Polski, English and Русский, with names of about 150 currencies in each.",f5t:"Favorites and search",f5p:"A star adds a currency to your favorites, and search finds it by code or by name.",f6t:"For old iPhones",f6p:"Written from scratch for iOS 6, light and fast, with no ads and no tracking.",
+h_pv:"Preview",cap:"Mock-up of the Aluminium theme (a rendering, not a phone screenshot).",h_in:"Installation",
+s1:"In Cydia: <b>Manage → Sources → Edit → Add</b> and enter <code>https://slam0.github.io/cydia/</code>.",s2:"Search for <b>Currency</b> and tap <b>Install</b>. New versions will update automatically.",s3:"Or download the <b>.ipa</b> file and install it with iTunes (AppSync Unified required).",
+disc:"Rates are approximate and not meant for settlements. Exchange offices and banks use their own rates.",attr:"Rates By Exchange Rate API",
+title:"Currency – currency converter for iOS 6",src_ok:"Rates: open.er-api.com, as of ",src_off:"Offline: sample rates, for play only.",loading:"Loading rates…",off:"OFFLINE · sample rates"},
+ru:{tk_label:"1 = $",tag:"Конвертер валют для iOS 6",sub:"Актуальные курсы из интернета, максимально скевоморфная тема «Алюминий» и работа без сети.",b_ipa:"Скачать .ipa",b_cy:"Источник Cydia",b_gh:"Код на GitHub",req:"iOS 6.0 и новее · iPhone 3GS/4/4S/5 и iPod touch 4/5 (armv7) · нужен джейлбрейк",h_try:"Попробуйте конвертер",l_amt:"СУММА",l_res:"РЕЗУЛЬТАТ",h_ft:"Возможности",
+f1t:"Актуальные курсы",f1p:"Курсы с open.er-api.com или НБП, обновляются раз в час при запуске.",f2t:"Работает без сети",f2p:"Последние загруженные курсы хранятся в телефоне, поэтому конвертер считает и в метро.",f3t:"Алюминий и 6 тем",f3p:"Шлифованный металл, хром, винтики и ЖК-экраны с семисегментными цифрами.",f4t:"Три языка",f4p:"Polski, English и Русский, названия около 150 валют на каждом.",f5t:"Избранное и поиск",f5p:"Звёздочка добавляет валюту в избранное, а поиск находит её по коду и по названию.",f6t:"Для старых iPhone",f6p:"Написано с нуля под iOS 6, лёгкое и быстрое, без рекламы и слежки.",
+h_pv:"Превью",cap:"Макет темы «Алюминий» (визуализация, не снимок с телефона).",h_in:"Установка",
+s1:"В Cydia: <b>Manage → Sources → Edit → Add</b> и введите <code>https://slam0.github.io/cydia/</code>.",s2:"Найдите <b>Currency</b> и нажмите <b>Install</b>. Новые версии обновятся сами.",s3:"Или скачайте файл <b>.ipa</b> и установите через iTunes (нужен AppSync Unified).",
+disc:"Курсы ориентировочные и не предназначены для расчётов. Банки и обменники применяют свои курсы.",attr:"Rates By Exchange Rate API",
+title:"Currency – конвертер валют для iOS 6",src_ok:"Курсы: open.er-api.com, по состоянию на ",src_off:"Нет сети: примерные курсы, только для игры.",loading:"Загрузка курсов…",off:"НЕТ СЕТИ · примерные курсы"}
+};
+
+var lang="pl",R=null,live=false,stamp="",amt="100",from="EUR",to="PLN";
+
+function $(id){return document.getElementById(id)}
+function each(l,f){for(var i=0;i<l.length;i++)f(l[i],i)}
+function tr(k){return (T[lang]&&T[lang][k])||T.pl[k]||""}
+
+/* śrubki w płytach */
+function addScrews(){
+ each(document.querySelectorAll(".plate"),function(p){
+  var cl=["tl r1","tr r3","bl r4","br r2"];
+  each(cl,function(c){var s=document.createElement("span");s.className="scr "+c;p.appendChild(s)});
+ });
+ each(document.querySelectorAll(".sh"),function(p){
+  if(!p.querySelector(".scr")){var a=document.createElement("span");a.className="scr l r2";p.insertBefore(a,p.firstChild);var b=document.createElement("span");b.className="scr rt r4";p.appendChild(b)}
+ });
+}
+
+/* ---------- język ---------- */
+function applyLang(l){
+ lang=T[l]?l:"pl";
+ document.documentElement.setAttribute("lang",lang);
+ document.title=tr("title");
+ each(document.querySelectorAll("[data-t]"),function(e){var k=e.getAttribute("data-t");var v=T[lang][k];if(v!=null)e.textContent=v});
+ each(document.querySelectorAll("[data-h]"),function(e){var k=e.getAttribute("data-h");var v=T[lang][k];if(v!=null)e.innerHTML=v});
+ each(document.querySelectorAll("#lg button"),function(b){b.className=(b.getAttribute("data-l")===lang)?"on":""});
+ try{localStorage.setItem("cur_lang",lang)}catch(e){}
+ buildTicker();updateSrc();
+}
+
+/* ---------- kursy ---------- */
+function getRates(cb){
+ var done=false;
+ function fin(rates,ok,date){if(done)return;done=true;cb(rates,ok,date)}
+ try{
+  var x=new XMLHttpRequest();
+  x.open("GET",URL_ER,true);x.timeout=9000;
+  x.onreadystatechange=function(){
+   if(x.readyState!==4)return;
+   if(x.status===200){
+    try{var j=JSON.parse(x.responseText);if(j&&j.rates&&j.rates.EUR){var d=(j.time_last_update_utc||"").replace(/ \+0000$/,"").replace(/^\w+, /,"");fin(j.rates,true,d);return}}catch(e){}
+   }
+   fin(FALL,false,"");
+  };
+  x.ontimeout=function(){fin(FALL,false,"")};
+  x.onerror=function(){fin(FALL,false,"")};
+  x.send(null);
+ }catch(e){fin(FALL,false,"")}
+}
+function price(c){return (R&&R[c])?1/R[c]:null}
+function fmtP(p){return p.toFixed(p<0.01?5:4)}
+
+function buildTicker(){
+ var trk=$("trk");
+ if(!R){trk.innerHTML='<span class="it"><b>'+tr("loading")+'</b></span>';return}
+ var prev=null;
+ try{prev=JSON.parse(localStorage.getItem("cur_tk")||"null")}catch(e){}
+ var h="",cur={};
+ each(TICK,function(c){
+  var p=price(c);if(p==null)return;
+  cur[c]=p;
+  var ar="";
+  if(live&&prev&&prev.p&&prev.p[c]){
+   var a=Math.round(p*1e5),b=Math.round(prev.p[c]*1e5);
+   if(a>b)ar=' <u class="up">&#9650;</u>';else if(a<b)ar=' <u class="dn">&#9660;</u>';
+  }
+  h+='<span class="it"><b>'+c+'</b> $'+fmtP(p)+ar+'</span>';
+ });
+ if(!live)h='<span class="it"><b>'+tr("off")+'</b></span>'+h;
+ trk.innerHTML=h+h;
+ var w=trk.offsetWidth/2;
+ var dur=Math.max(40,Math.round(w/55));
+ trk.style.webkitAnimationDuration=dur+"s";trk.style.animationDuration=dur+"s";
+ $("led").className=live?"led":"led off";
+ if(live){try{if(!prev||!prev.t||(new Date().getTime()-prev.t)>12*3600*1000)localStorage.setItem("cur_tk",JSON.stringify({t:new Date().getTime(),p:cur}))}catch(e){}}
+}
+
+/* ---------- LCD siedmiosegmentowy ---------- */
+var MASK={"0":"abcdef","1":"bc","2":"abdeg","3":"abcdg","4":"bcfg","5":"acdfg","6":"acdefg","7":"abc","8":"abcdefg","9":"abcdfg","-":"g"};
+var W=56,H=100,TH=11,M=TH/2;
+function hs(x1,x2,y){return [[x1,y],[x1+M,y-M],[x2-M,y-M],[x2,y],[x2-M,y+M],[x1+M,y+M]]}
+function vs(x,y1,y2){return [[x,y1],[x+M,y1+M],[x+M,y2-M],[x,y2],[x-M,y2-M],[x-M,y1+M]]}
+var SEG={a:hs(M+2,W-M-2,M),g:hs(M+2,W-M-2,H/2),d:hs(M+2,W-M-2,H-M),f:vs(M,M+2,H/2-2),b:vs(W-M,M+2,H/2-2),e:vs(M,H/2+2,H-M-2),c:vs(W-M,H/2+2,H-M-2)};
+function pts(p){var s=[];each(p,function(q){s.push(q[0]+","+q[1])});return s.join(" ")}
+function digitSvg(ch){
+ var m=MASK[ch]||"",g="",l="";
+ each("abcdefg".split(""),function(k){
+  var on=m.indexOf(k)>=0;
+  if(on)l+='<polygon points="'+pts(SEG[k])+'" fill="#1f2b12"/>';
+  else g+='<polygon points="'+pts(SEG[k])+'" fill="rgba(31,43,18,.09)"/>';
+ });
+ return '<svg class="d" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+g+l+'</svg>';
+}
+function dotSvg(){return '<svg class="p" viewBox="0 0 16 '+H+'" preserveAspectRatio="none"><circle cx="8" cy="'+(H-M-1)+'" r="6.2" fill="#1f2b12"/></svg>'}
+function lcdHtml(s){
+ var h="",n=0;
+ each(s.split(""),function(c){if(c!==".")n++});
+ for(var i=n;i<9;i++)h+=digitSvg("");
+ each(s.split(""),function(c){h+=(c===".")?dotSvg():digitSvg(c)});
+ return h;
+}
+
+/* ---------- przelicznik ---------- */
+function conv(){
+ var a=parseFloat(amt);if(isNaN(a))a=0;
+ if(!R||!R[from]||!R[to])return null;
+ return a/R[from]*R[to];
+}
+function fmtRes(v){
+ if(v==null||!isFinite(v))return "Err";
+ var d=v>=1000?2:(v>=1?4:6),s=v.toFixed(d);
+ while(s.length>10&&d>0){d--;s=v.toFixed(d)}
+ if(s.length>10)return "Err";
+ if(s.indexOf(".")>=0){s=s.replace(/0+$/,"").replace(/\.$/,"");if(s.indexOf(".")<0&&false)s+=""}
+ return s;
+}
+function showLcd(){
+ $("dA").innerHTML=lcdHtml(amt);
+ $("dR").innerHTML=lcdHtml(fmtRes(conv()));
+ $("uA").textContent=from;$("uR").textContent=to;
+}
+function fillSelects(){
+ var sf=$("sf"),st=$("st"),h="";
+ each(LIST,function(c){if(R&&R[c])h+='<option value="'+c+'">'+c+'</option>'});
+ sf.innerHTML=h;st.innerHTML=h;sf.value=from;st.value=to;
+}
+function press(k){
+ if(k==="C")amt="0";
+ else if(k==="B")amt=amt.length>1?amt.slice(0,-1):"0";
+ else if(k==="S"){var t=from;from=to;to=t;$("sf").value=from;$("st").value=to}
+ else{
+  if(k==="."){if(amt.indexOf(".")<0&&amt.length<9)amt+="."}
+  else{
+   var add=k;if(amt==="0")amt="";
+   if((amt+add).replace(".","").length<=9&&amt.length+add.length<=10)amt+=add;
+  }
+ }
+ if(amt===""||amt==="-")amt="0";
+ showLcd();
+}
+function updateSrc(){
+ $("src").textContent=R?(live?tr("src_ok")+stamp:tr("src_off")):"";
+}
+
+function init(){
+ addScrews();
+ var l=null;
+ try{l=localStorage.getItem("cur_lang")}catch(e){}
+ if(!l){var n=(navigator.language||navigator.userLanguage||"pl").toLowerCase().substr(0,2);l=T[n]?n:"pl"}
+ if(l==="en"){from="USD";to="EUR"}else if(l==="ru"){from="USD";to="EUR"}
+ each(document.querySelectorAll("#lg button"),function(b){b.onclick=function(){applyLang(b.getAttribute("data-l"))}});
+ each(document.querySelectorAll("#keys button"),function(b){b.onclick=function(){press(b.getAttribute("data-k"))}});
+ $("sf").onchange=function(){from=this.value;showLcd()};
+ $("st").onchange=function(){to=this.value;showLcd()};
+ document.onkeydown=function(e){
+  var t=(e.target&&e.target.tagName)||"";if(t==="SELECT"||e.ctrlKey||e.metaKey||e.altKey)return;
+  var k=e.key||"",c=e.keyCode;
+  if(/^[0-9]$/.test(k))press(k);
+  else if(k==="."||k===","||c===190||c===188)press(".");
+  else if(k==="Backspace"||c===8){press("B");if(e.preventDefault)e.preventDefault()}
+  else if(k==="Escape"||c===27)press("C");
+ };
+ applyLang(l);
+ getRates(function(r,ok,d){
+  R=r;live=ok;stamp=d;
+  fillSelects();
+  if(!R[from])from="USD";if(!R[to])to="EUR";
+  $("sf").value=from;$("st").value=to;
+  buildTicker();updateSrc();showLcd();
+ });
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
+</body></html>
